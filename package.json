@@ -4,14 +4,16 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "lint": "oxlint",
+    "format": "oxfmt .",
     "check-types": "turbo run check-types",
     "db:studio": "cd packages/database && bunx prisma studio",
-    "db:generate": "cd packages/database && bunx prisma generate",
+    "db:generate": "turbo run db:generate",
     "db:migrate": "cd packages/database && bunx prisma migrate dev",
     "db:migrate:reset": "cd packages/database && bunx prisma migrate reset --force",
-    "docker": "docker compose -f docker-compose.yml up --build -d"
+    "docker": "docker compose -f docker-compose.yml up --build -d",
+    "format:check": "oxfmt --check .",
+    "lint:fix": "oxlint --fix"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
@@ -37,6 +39,8 @@
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.10.1",
     "@prisma/client": "7",
-    "dotenv": "^18.0.9"
+    "dotenv": "^18.0.9",
+    "oxfmt": "^0.75.0",
+    "oxlint": "^1.90.0"
   }
 }

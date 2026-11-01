@@ -1,4 +1,5 @@
 import { Client, Collection, GatewayIntentBits } from "discord.js";
+
 import { config } from "./config.ts";
 import { loadCommands, loadEvents } from "./loader.ts";
 import type { Command } from "./types.ts";

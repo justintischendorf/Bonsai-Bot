@@ -1,0 +1,38 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "env": {
+    "node": true,
+    "es2024": true
+  },
+  "plugins": ["typescript", "unicorn", "oxc", "import"],
+  "rules": {
+    "typescript/no-explicit-any": "warn",
+    "no-unused-vars": "warn",
+    "no-undef": "off",
+    "sort-imports": "off",
+    "import/no-duplicates": "off"
+  },
+  "overrides": [
+    {
+      "files": ["apps/web/**"],
+      "env": { "browser": true },
+      "plugins": ["react", "react-perf", "nextjs"],
+      "rules": {
+        "react/rules-of-hooks": "error",
+        "react/exhaustive-deps": "warn",
+        "react/no-danger": "warn",
+        "react/no-direct-mutation-state": "error",
+        "nextjs/no-img-element": "warn",
+        "nextjs/no-html-link-for-pages": "warn"
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "node_modules",
+    ".next",
+    "dist",
+    "build",
+    ".turbo",
+    "**/generated/**"
+  ]
+}

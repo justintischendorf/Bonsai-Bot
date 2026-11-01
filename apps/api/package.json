@@ -1,13 +1,19 @@
 {
-  "name": "app",
+  "name": "@repo/api",
   "version": "1.0.50",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun run --watch src/index.ts"
+    "dev": "bun run --watch src/index.ts",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "elysia": "latest",
-    "@repo/database": "workspace:*"
+    "@elysiajs/cors": "^1.4.2",
+    "@repo/database": "workspace:*",
+    "@repo/logger": "workspace:*",
+    "elysia": "latest"
   },
   "devDependencies": {
     "bun-types": "latest"

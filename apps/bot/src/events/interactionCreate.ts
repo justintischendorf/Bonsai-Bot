@@ -1,4 +1,5 @@
 import { Events, MessageFlags } from "discord.js";
+
 import type { Event } from "../types.ts";
 
 export default {

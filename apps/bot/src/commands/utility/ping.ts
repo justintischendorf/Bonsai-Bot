@@ -1,4 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
+
 import type { Command } from "../../types.ts";
 
 export default {
@@ -6,7 +7,10 @@ export default {
     .setName("ping")
     .setDescription("Antwortet mit Pong und der Latenz."),
   async execute(interaction) {
-    const sent = await interaction.reply({ content: "Pong!", withResponse: true });
+    const sent = await interaction.reply({
+      content: "Pong!",
+      withResponse: true,
+    });
     const latency =
       (sent.resource?.message?.createdTimestamp ?? Date.now()) -
       interaction.createdTimestamp;
