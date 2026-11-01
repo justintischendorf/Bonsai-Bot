@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",
+    "@repo/auth": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/logger": "workspace:*",
     "elysia": "latest"
