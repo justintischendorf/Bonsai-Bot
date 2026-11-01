@@ -1,15 +1,20 @@
 {
-  "extends": "@repo/typescript-config/base.json",
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "lib": ["ESNext"],
     "module": "Preserve",
     "moduleResolution": "bundler",
+    "moduleDetection": "force",
     "target": "ESNext",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
-    "declaration": false,
-    "declarationMap": false,
     "types": ["bun"]
   },
   "include": ["src"]
