@@ -6,6 +6,6 @@ function required(name: string): string {
 
 export const config = {
   token: required("DISCORD_TOKEN"),
-  clientId: required("CLIENT_ID"),
-  guildId: process.env.GUILD_ID || undefined,
+  clientId: required("DISCORD_CLIENT_ID"),
+  guildId: process.env.DISCORD_GUILD_ID || undefined,
 };

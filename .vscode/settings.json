@@ -17,5 +17,8 @@
   "oxc.enable.oxlint": true,
   "oxc.lint.run": "onType",
   "prettier.enable": false,
-  "eslint.enable": false
+  "eslint.enable": false,
+  "[css]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  }
 }

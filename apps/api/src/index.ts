@@ -3,6 +3,8 @@ import { Elysia } from "elysia";
 
 import { createLogger } from "@repo/logger";
 
+import { authPlugin } from "./modules/auth";
+
 const logger = createLogger("api");
 
 const app = new Elysia({ prefix: "/api" })
@@ -14,7 +16,18 @@ const app = new Elysia({ prefix: "/api" })
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     }),
   )
-  .onError(({ set }) => {
+  .use(authPlugin)
+  .onError(({ error, set }) => {
+    if (error instanceof Error && error.message === "Unauthorized") {
+      set.status = 401;
+      logger.warn("Nicht autorisiert");
+      return {
+        success: false,
+        message: "Nicht autorisiert",
+        error: "UNAUTHORIZED",
+      };
+    }
+
     set.status = 500;
     logger.error("Interner Serverfehler");
     return {

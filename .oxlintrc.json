@@ -7,7 +7,10 @@
   "plugins": ["typescript", "unicorn", "oxc", "import"],
   "rules": {
     "typescript/no-explicit-any": "warn",
-    "no-unused-vars": "warn",
+    "no-unused-vars": [
+      "warn",
+      { "fix": { "imports": "safe-fix", "variables": "suggestion" } }
+    ],
     "no-undef": "off",
     "sort-imports": "off",
     "import/no-duplicates": "off"

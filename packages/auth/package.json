@@ -1,0 +1,22 @@
+{
+  "name": "@repo/auth",
+  "module": "index.ts",
+  "exports": {
+    ".": "./src/auth.ts"
+  },
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  },
+  "dependencies": {
+    "better-auth": "^1.7.15",
+    "@repo/database": "workspace:*"
+  }
+}
