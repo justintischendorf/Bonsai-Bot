@@ -1,0 +1,21 @@
+{
+  "name": "bot",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "module": "src/index.ts",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "deploy": "bun src/deploy-commands.ts",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "discord.js": "^14.27.0"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/bun": "latest",
+    "typescript": "7.0.2"
+  }
+}
