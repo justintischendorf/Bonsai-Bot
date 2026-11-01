@@ -1,5 +1,7 @@
-import { Glob } from "bun";
 import path from "node:path";
+
+import { Glob } from "bun";
+
 import type { Command, Event } from "./types.ts";
 
 const srcDir = import.meta.dir;

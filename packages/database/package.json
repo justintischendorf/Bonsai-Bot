@@ -15,5 +15,9 @@
   },
   "dependencies": {
     "@prisma/adapter-libsql": "^7.10.1"
+  },
+  "scripts": {
+    "db:generate": "prisma generate",
+    "check-types": "tsc --noEmit"
   }
 }

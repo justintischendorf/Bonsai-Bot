@@ -1,0 +1,23 @@
+{
+  "name": "@repo/treaty",
+  "module": "index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  },
+  "dependencies": {
+    "@elysia/eden": "^1.4.10",
+    "@repo/api": "workspace:*",
+    "@repo/logger": "workspace:*"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  }
+}
