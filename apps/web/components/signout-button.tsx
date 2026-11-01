@@ -3,7 +3,6 @@
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { resetLoadingScreen } from "@/components/loading-screen";
 import { authClient } from "@/lib/auth-client";
 
 import { Button } from "./ui/button";
@@ -21,8 +20,8 @@ export default function SignOutButton() {
       });
       return;
     }
-    resetLoadingScreen();
-    router.push("/login");
+    router.replace("/login");
+    router.refresh();
   }
 
   return (
