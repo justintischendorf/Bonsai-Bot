@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
+
+import { Geist, Geist_Mono } from "next/font/google";
+
+import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/toast";
 
 const geistSans = Geist({
@@ -16,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Bonsai Bot Dashboard",
-  description: "A dashboard for managing Bonsai Bot.",
+  description: "A dashboard for your Server.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -26,7 +29,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col">
-        {children} <Toaster />
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );
