@@ -5,7 +5,7 @@ import { createLogger } from "@repo/logger";
 
 import { errorPlugin } from "./error-plugin";
 import { authPlugin } from "./modules/auth";
-import { server } from "./modules/server";
+import { discord } from "./modules/discord";
 
 const logger = createLogger("api");
 
@@ -20,7 +20,7 @@ const app = new Elysia({ prefix: "/api" })
   )
   .use(errorPlugin)
   .use(authPlugin)
-  .use(server)
+  .use(discord)
   .listen(process.env.API_SERVER_PORT || 3001);
 
 logger.info(`🦊 Elysia läuft auf http://localhost:${app.server?.port}`);

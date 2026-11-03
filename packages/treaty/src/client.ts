@@ -11,6 +11,7 @@ if (!API_SERVER_URL) {
   logger.error("API_SERVER_URL is not defined");
 }
 
+export type { Treaty };
 export type ApiClient = Treaty.Create<App>;
 
 export const createApiClient = (baseUrl: string): ApiClient => {

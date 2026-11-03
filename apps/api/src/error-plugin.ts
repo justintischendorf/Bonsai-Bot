@@ -46,6 +46,16 @@ export const errorPlugin = new Elysia({ name: "error" }).onError(
       };
     }
 
+    if (error instanceof Error && error.message === "PRESENCE_UNAVAILABLE") {
+      set.status = 503;
+      logger.warn("Online-Status nicht verfügbar");
+      return {
+        success: false,
+        message: "Der Online-Status ist gerade nicht verfügbar",
+        error: "PRESENCE_UNAVAILABLE",
+      };
+    }
+
     set.status = 500;
     logger.error("Interner Serverfehler");
     return {
