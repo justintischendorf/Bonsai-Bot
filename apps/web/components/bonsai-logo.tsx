@@ -89,17 +89,22 @@ export function BonsaiLogo({
     if (!followCursor || reducedMotion) return;
 
     let frame = 0;
+    let pointer = { x: 0, y: 0 };
     const onPointerMove = (e: PointerEvent) => {
       lastPointerMove.current = Date.now();
-      cancelAnimationFrame(frame);
+      pointer = { x: e.clientX, y: e.clientY };
+      // Keep a pending frame: canceling it on every move would starve the update
+      // until the pointer stops.
+      if (frame) return;
       frame = requestAnimationFrame(() => {
+        frame = 0;
         const svg = svgRef.current;
         if (!svg) return;
         const rect = svg.getBoundingClientRect();
         const scale = rect.width / VIEWBOX.size;
         const dx =
-          e.clientX - (rect.left + (EYES_CENTER.x - VIEWBOX.x) * scale);
-        const dy = e.clientY - (rect.top + (EYES_CENTER.y - VIEWBOX.y) * scale);
+          pointer.x - (rect.left + (EYES_CENTER.x - VIEWBOX.x) * scale);
+        const dy = pointer.y - (rect.top + (EYES_CENTER.y - VIEWBOX.y) * scale);
         const distance = Math.hypot(dx, dy) || 1;
         const strength = Math.min(1, distance / 300);
         setLook({

@@ -6,6 +6,12 @@ export type DiscordGuild = {
   approximate_presence_count: number;
 };
 
+export type DiscordRole = {
+  id: string;
+  name: string;
+  position: number;
+};
+
 export type DiscordMember = {
   user: {
     id: string;
