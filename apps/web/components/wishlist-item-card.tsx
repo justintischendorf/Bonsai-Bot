@@ -1,38 +1,32 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MoveRight, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { wishlistQueryKey } from "@/hooks/use-wishlist";
+import { wishlistQueryKey, type WishlistItem } from "@/hooks/use-wishlist";
 import { apiClient } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import type { WishlistModel } from "@repo/database/src/types";
 
 import { toast } from "./ui/toast";
 
 const DESCRIPTION_PREVIEW_LENGTH = 120;
 
-const priceFormatter = new Intl.NumberFormat("de-DE", {
-  style: "currency",
-  currency: "EUR",
-});
-
 export default function WishlistItemCard({
   item,
   className,
 }: {
-  item: WishlistModel;
+  item: WishlistItem;
   className?: string;
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const queryClient = useQueryClient();
 
   const shops = [
@@ -85,6 +79,9 @@ export default function WishlistItemCard({
               Release: {item.releaseDate}
             </p>
           )}
+          <p className="truncate text-sm text-muted-foreground">
+            Hinzugefügt von {item.createdBy}
+          </p>
         </div>
         <Button
           className="text-muted-foreground transition-colors duration-300 hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
@@ -101,27 +98,34 @@ export default function WishlistItemCard({
         </Button>
       </div>
       {item.description.length > DESCRIPTION_PREVIEW_LENGTH ? (
-        <Accordion onValueChange={(value) => setIsExpanded(value.length > 0)}>
-          <AccordionItem>
-            {!isExpanded && (
-              <p className="line-clamp-3 text-sm leading-relaxed text-bonsai-pot">
-                {item.description}
-              </p>
-            )}
-            <AccordionContent
-              style={{ animation: "none" }}
-              className="h-auto pb-0 text-sm leading-relaxed text-bonsai-pot"
-            >
-              {item.description}
-            </AccordionContent>
-            <AccordionTrigger
-              className="items-center py-1 text-sm text-muted-foreground transition-colors duration-300 hover:text-bonsai-leaf-light hover:no-underline"
-              aria-label={`${isExpanded ? "Weniger" : "Mehr"} anzeigen: Beschreibung von ${item.name}`}
-            >
-              {isExpanded ? "Weniger anzeigen" : "Mehr anzeigen"}
-            </AccordionTrigger>
-          </AccordionItem>
-        </Accordion>
+        <div className="flex flex-col items-start gap-1">
+          <p className="line-clamp-3 text-sm leading-relaxed text-bonsai-pot">
+            {item.description}
+          </p>
+          <Dialog>
+            <DialogTrigger
+              render={
+                <button
+                  className="cursor-pointer py-1 text-sm font-medium text-muted-foreground transition-colors duration-300 hover:text-bonsai-leaf-light"
+                  type="button"
+                  aria-label={`Mehr anzeigen: Beschreibung von ${item.name}`}
+                >
+                  Mehr anzeigen
+                </button>
+              }
+            />
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="pr-8 leading-snug">
+                  {item.name}
+                </DialogTitle>
+                <DialogDescription className="max-h-[60vh] overflow-y-auto leading-relaxed">
+                  {item.description}
+                </DialogDescription>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
+        </div>
       ) : (
         <p className="text-sm leading-relaxed text-muted-foreground empty:hidden">
           {item.description}
@@ -144,7 +148,7 @@ export default function WishlistItemCard({
                 </Link>
                 {price !== null && (
                   <span className="shrink-0 text-sm font-medium text-bonsai-leaf-light">
-                    {priceFormatter.format(price)}
+                    {price} €
                   </span>
                 )}
               </div>
@@ -159,7 +163,10 @@ export function WishlistItemCardSkeleton() {
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-accent p-3">
       <div className="flex items-start justify-between gap-2">
-        <Skeleton className="h-7 w-2/3" />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <Skeleton className="h-7 w-2/3" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
         <Skeleton className="size-7 shrink-0" />
       </div>
       <div className="flex flex-col gap-2">

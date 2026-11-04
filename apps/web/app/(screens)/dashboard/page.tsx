@@ -13,16 +13,16 @@ import bonsaiBotTitle from "@/assets/logos/bonsai-bot-title.svg";
 import { BonsaiLogo } from "@/components/bonsai-logo";
 import MemberCard, { MemberCardSkeleton } from "@/components/member-card";
 import NowPlaying from "@/components/now-playing";
-import Recommendation from "@/components/recommendation";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import WishlistSuggestion from "@/components/wishlist-suggestion";
 import { useDiscordMemberInfo } from "@/hooks/use-discord-member-info";
 import { useFloatToTextBottom } from "@/hooks/use-float-to-text-bottom";
 import { useLimitVisibleItems } from "@/hooks/use-limit-visible-items";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 
-const MAX_VISIBLE_MEMBERS = 14;
+const MAX_VISIBLE_MEMBERS = 12;
 
 let introPlayed = false;
 let cardsIntroPlayed = false;
@@ -157,7 +157,7 @@ export default function DashboardPage() {
   return (
     <main ref={pageRef}>
       <div className="flex-col sm:flex-row sm:h-25 flex gap-5 pb-5 px-4 sm:px-8 xl:px-20">
-        <Recommendation className="intro-card opacity-0" />
+        <WishlistSuggestion className="intro-card opacity-0" />
         <NowPlaying className="intro-card opacity-0" />
       </div>
       <div className="flex flex-col gap-10 items-start justify-center lg:flex-row lg:gap-0">
@@ -199,7 +199,7 @@ export default function DashboardPage() {
               Wunschliste
               <MoveRight className="transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
-            <Link href="/music" className={linkStyles}>
+            <Link href="/bonsai-fm" className={linkStyles}>
               Bonsai FM
               <MoveRight className="transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
