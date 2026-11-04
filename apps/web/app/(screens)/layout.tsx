@@ -40,7 +40,7 @@ export default function DashboardLayout({
 
   return (
     <main className="flex min-h-screen flex-col py-6 lg:py-10">
-      <header className="flex items-center justify-between px-4 pb-8 gap-4 sm:px-8 lg:pb-15 xl:px-25">
+      <header className="flex items-center justify-between px-4 pb-4 gap-4 sm:px-8 lg:pb-10 xl:px-25">
         <Navigation />
         <div className="flex min-w-0 items-center gap-2 sm:gap-4">
           {isDiscordServerInfoLoading ? (

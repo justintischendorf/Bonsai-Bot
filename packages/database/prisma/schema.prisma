@@ -72,3 +72,17 @@ model Verification {
   @@index([identifier])
   @@map("verification")
 }
+
+model Wishlist {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  description        String
+  steamPrice         Float?
+  instantGamingPrice Float?
+  steamLink          String?
+  instantGamingLink  String?
+  releaseDate        String?
+  createdAt          DateTime @default(now())
+
+  @@map("wishlist")
+}

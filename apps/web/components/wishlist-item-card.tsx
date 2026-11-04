@@ -1,0 +1,177 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { MoveRight, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { wishlistQueryKey } from "@/hooks/use-wishlist";
+import { apiClient } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
+import type { WishlistModel } from "@repo/database/src/types";
+
+import { toast } from "./ui/toast";
+
+const DESCRIPTION_PREVIEW_LENGTH = 120;
+
+const priceFormatter = new Intl.NumberFormat("de-DE", {
+  style: "currency",
+  currency: "EUR",
+});
+
+export default function WishlistItemCard({
+  item,
+  className,
+}: {
+  item: WishlistModel;
+  className?: string;
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const queryClient = useQueryClient();
+
+  const shops = [
+    { name: "Steam", link: item.steamLink, price: item.steamPrice },
+    {
+      name: "Instant Gaming",
+      link: item.instantGamingLink,
+      price: item.instantGamingPrice,
+    },
+  ];
+
+  const { mutateAsync: removeWishlistItem } = useMutation({
+    mutationFn: async (input: { id: number }) => {
+      return apiClient.api.wishlist(input).delete();
+    },
+  });
+
+  async function handleRemoveWishlistItem(id: number) {
+    const { error: removeWishlistItemError } = await removeWishlistItem({ id });
+
+    if (removeWishlistItemError) {
+      toast.add({
+        title:
+          removeWishlistItemError.status + " Fehler beim Entfernen des Spiels",
+        description: removeWishlistItemError.value.message,
+      });
+      return;
+    }
+
+    queryClient.invalidateQueries({ queryKey: wishlistQueryKey });
+
+    toast.add({
+      title: `${item.name} erfolgreich entfernt`,
+      description: "Das Spiel wurde von der Wunschliste entfernt.",
+    });
+  }
+
+  return (
+    <article
+      className={cn(
+        "flex flex-col gap-3 rounded-xl border border-accent p-3",
+        className,
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h2 className="truncate text-lg font-semibold">{item.name}</h2>
+          {item.releaseDate && (
+            <p className="truncate text-sm text-muted-foreground">
+              Release: {item.releaseDate}
+            </p>
+          )}
+        </div>
+        <Button
+          className="text-muted-foreground transition-colors duration-300 hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
+          variant="ghost"
+          size="icon-sm"
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            handleRemoveWishlistItem(item.id);
+          }}
+          aria-label={`${item.name} von der Wunschliste entfernen`}
+        >
+          <Trash2 />
+        </Button>
+      </div>
+      {item.description.length > DESCRIPTION_PREVIEW_LENGTH ? (
+        <Accordion onValueChange={(value) => setIsExpanded(value.length > 0)}>
+          <AccordionItem>
+            {!isExpanded && (
+              <p className="line-clamp-3 text-sm leading-relaxed text-bonsai-pot">
+                {item.description}
+              </p>
+            )}
+            <AccordionContent
+              style={{ animation: "none" }}
+              className="h-auto pb-0 text-sm leading-relaxed text-bonsai-pot"
+            >
+              {item.description}
+            </AccordionContent>
+            <AccordionTrigger
+              className="items-center py-1 text-sm text-muted-foreground transition-colors duration-300 hover:text-bonsai-leaf-light hover:no-underline"
+              aria-label={`${isExpanded ? "Weniger" : "Mehr"} anzeigen: Beschreibung von ${item.name}`}
+            >
+              {isExpanded ? "Weniger anzeigen" : "Mehr anzeigen"}
+            </AccordionTrigger>
+          </AccordionItem>
+        </Accordion>
+      ) : (
+        <p className="text-sm leading-relaxed text-muted-foreground empty:hidden">
+          {item.description}
+        </p>
+      )}
+      <div className="mt-auto flex flex-col gap-1">
+        {shops.map(
+          ({ name, link, price }) =>
+            link && (
+              <div
+                key={name}
+                className="flex items-baseline justify-between gap-2"
+              >
+                <Link
+                  href={link}
+                  className="group flex w-fit items-center gap-1 text-sm font-medium text-muted-foreground transition-colors duration-300 hover:text-bonsai-leaf-light"
+                >
+                  {name}
+                  <MoveRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </Link>
+                {price !== null && (
+                  <span className="shrink-0 text-sm font-medium text-bonsai-leaf-light">
+                    {priceFormatter.format(price)}
+                  </span>
+                )}
+              </div>
+            ),
+        )}
+      </div>
+    </article>
+  );
+}
+
+export function WishlistItemCardSkeleton() {
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border border-accent p-3">
+      <div className="flex items-start justify-between gap-2">
+        <Skeleton className="h-7 w-2/3" />
+        <Skeleton className="size-7 shrink-0" />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-5 w-2/3" />
+      </div>
+      <div className="flex flex-col gap-1">
+        <Skeleton className="h-5 w-full" />
+        <Skeleton className="h-5 w-full" />
+      </div>
+    </div>
+  );
+}
