@@ -56,6 +56,59 @@ export const errorPlugin = new Elysia({ name: "error" }).onError(
       };
     }
 
+    if (error instanceof Error && error.message === "NO_LINK_PROVIDED") {
+      set.status = 400;
+      logger.warn("Kein Link angegeben");
+      return {
+        success: false,
+        message: "Kein Link wurde angegeben",
+        error: "NO_LINK_PROVIDED",
+      };
+    }
+
+    if (error instanceof Error && error.message === "GAME_ALREADY_EXISTS") {
+      set.status = 400;
+      logger.warn("Spiel existiert bereits in der Wunschliste");
+      return {
+        success: false,
+        message: "Spiel existiert bereits in der Wunschliste",
+        error: "GAME_ALREADY_EXISTS",
+      };
+    }
+
+    if (error instanceof Error && error.message === "STEAM_SCRAPING_FAILED") {
+      set.status = 400;
+      logger.warn("Steam-Scraping fehlgeschlagen");
+      return {
+        success: false,
+        message: "Steam-Scraping fehlgeschlagen",
+        error: "STEAM_SCRAPING_FAILED",
+      };
+    }
+
+    if (
+      error instanceof Error &&
+      error.message === "INSTANT_GAMING_SCRAPING_FAILED"
+    ) {
+      set.status = 400;
+      logger.warn("Instant Gaming-Scraping fehlgeschlagen");
+      return {
+        success: false,
+        message: "Instant Gaming-Scraping fehlgeschlagen",
+        error: "INSTANT_GAMING_SCRAPING_FAILED",
+      };
+    }
+
+    if (error instanceof Error && error.message === "FAILED_TO_FETCH_PAGE") {
+      set.status = 400;
+      logger.warn("Seite konnte nicht abgerufen werden");
+      return {
+        success: false,
+        message: "Seite konnte nicht abgerufen werden",
+        error: "FAILED_TO_FETCH_PAGE",
+      };
+    }
+
     set.status = 500;
     logger.error("Interner Serverfehler");
     return {

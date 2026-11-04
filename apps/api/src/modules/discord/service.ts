@@ -7,7 +7,7 @@ import {
 
 import { createLogger } from "@repo/logger";
 
-import type { DiscordGuild, DiscordMember, DiscordRole } from "./model";
+import type { DiscordModel } from "./model";
 
 const logger = createLogger("api:discord");
 
@@ -61,7 +61,7 @@ function getPresenceReader(): (userId: string) => {
   };
 }
 
-function getAvatarUrl({ id, avatar }: DiscordMember["user"]) {
+function getAvatarUrl({ id, avatar }: DiscordModel["Member"]["user"]) {
   return avatar
     ? `${CDN}/avatars/${id}/${avatar}.png`
     : `${CDN}/embed/avatars/${(BigInt(id) >> BigInt(22)) % BigInt(6)}.png`;
@@ -69,7 +69,7 @@ function getAvatarUrl({ id, avatar }: DiscordMember["user"]) {
 
 export abstract class DiscordService {
   static async getServer() {
-    const guild = await discord<DiscordGuild>("?with_counts=true");
+    const guild = await discord<DiscordModel["Guild"]>("?with_counts=true");
 
     return {
       id: guild.id,
@@ -83,8 +83,8 @@ export abstract class DiscordService {
   static async getMembers() {
     const getPresence = getPresenceReader();
     const [members, guildRoles] = await Promise.all([
-      discord<DiscordMember[]>("/members?limit=1000"),
-      discord<DiscordRole[]>("/roles"),
+      discord<DiscordModel["Member"][]>("/members?limit=1000"),
+      discord<DiscordModel["Role"][]>("/roles"),
     ]);
     const rolesByRank = guildRoles.sort((a, b) => b.position - a.position);
 

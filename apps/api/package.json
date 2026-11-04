@@ -10,10 +10,12 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@elysia/cron": "^1.4.2",
     "@elysiajs/cors": "^1.4.2",
     "@repo/auth": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/logger": "workspace:*",
+    "cheerio": "^1.2.0",
     "discord.js": "^14.27.0",
     "elysia": "latest"
   },
