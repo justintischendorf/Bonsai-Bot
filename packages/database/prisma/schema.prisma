@@ -82,6 +82,7 @@ model Wishlist {
   steamLink          String?
   instantGamingLink  String?
   releaseDate        String?
+  createdBy          String
   createdAt          DateTime @default(now())
 
   @@map("wishlist")
