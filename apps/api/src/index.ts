@@ -7,12 +7,14 @@ import { createLogger } from "@repo/logger";
 import { errorPlugin } from "./error-plugin";
 import { authPlugin } from "./modules/auth";
 import { discord } from "./modules/discord";
+import { music } from "./modules/music";
 import { wishlist } from "./modules/wishlist";
 import { WishlistService } from "./modules/wishlist/service";
 
 const logger = createLogger("api");
 
 const app = new Elysia({ prefix: "/api" })
+  .use(errorPlugin)
   .use(
     cors({
       origin: process.env.WEB_SERVER_URL?.replace(/\/$/, ""),
@@ -30,8 +32,9 @@ const app = new Elysia({ prefix: "/api" })
       },
     }),
   )
-  .use(errorPlugin)
+  .get("/health", () => ({ status: "ok" }))
   .use(authPlugin)
+  .use(music)
   .use(discord)
   .use(wishlist)
   .listen(process.env.API_SERVER_PORT || 3001);

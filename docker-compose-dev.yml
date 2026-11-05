@@ -1,0 +1,125 @@
+# Startet alles außer Web und API, die laufen lokal über "bun run dev".
+# Start:         bun run docker:dev
+# Konfiguration: apps/bot/.env
+# Änderungen in apps/bot/src greifen ohne Neustart. Nach neuen Abhängigkeiten oder Schema-Änderungen neu bauen.
+
+name: bonsai-bot-dev
+
+services:
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:4.2.2
+    restart: unless-stopped
+    depends_on:
+      - yt-cipher
+    read_only: true
+    tmpfs:
+      # Lavalink entpackt native Audio-Bibliotheken nach /tmp und lädt sie von dort, deshalb "exec".
+      - /tmp:exec
+      # Das Plugin wird beim Start hierhin geladen, der Rest des Dateisystems bleibt schreibgeschützt.
+      - /opt/Lavalink/plugins:uid=322,gid=322
+    environment:
+      SERVER_PORT: 2333
+      SERVER_ADDRESS: 0.0.0.0
+      LAVALINK_SERVER_PASSWORD: dev-password
+      _JAVA_OPTIONS: -Xmx512m
+      # Offizieller Snapshot statt Release 1.18.2: Mit dem Release schlug die Wiedergabe bei 9 von 12 Songs fehl, hiermit bei keinem.
+      # Beim nächsten offiziellen Release wieder auf eine feste Version wechseln.
+      LAVALINK_PLUGINS_0_DEPENDENCY: dev.lavalink.youtube:youtube-plugin:2be8e542d3f6f178e048dca565892684c2e40177
+      LAVALINK_PLUGINS_0_SNAPSHOT: "true"
+      # Die eingebaute YouTube-Quelle ist veraltet, das Plugin ersetzt sie.
+      LAVALINK_SERVER_SOURCES_YOUTUBE: "false"
+      # Alles andere bleibt aus: "http" und "local" würden Zugriffe auf interne Adressen und Dateien erlauben.
+      LAVALINK_SERVER_SOURCES_BANDCAMP: "false"
+      LAVALINK_SERVER_SOURCES_SOUNDCLOUD: "false"
+      LAVALINK_SERVER_SOURCES_TWITCH: "false"
+      LAVALINK_SERVER_SOURCES_VIMEO: "false"
+      LAVALINK_SERVER_SOURCES_NICO: "false"
+      LAVALINK_SERVER_SOURCES_HTTP: "false"
+      LAVALINK_SERVER_SOURCES_LOCAL: "false"
+      LAVALINK_SERVER_SOUNDCLOUDSEARCHENABLED: "false"
+      LAVALINK_SERVER_PLAYERUPDATEINTERVAL: 2
+      PLUGINS_YOUTUBE_ENABLED: "true"
+      PLUGINS_YOUTUBE_ALLOWSEARCH: "true"
+      PLUGINS_YOUTUBE_ALLOWDIRECTVIDEOIDS: "true"
+      PLUGINS_YOUTUBE_ALLOWDIRECTPLAYLISTIDS: "false"
+      # MUSIC sucht nur. Fällt ein Client beim Abspielen aus, greift der nächste; TV funktioniert nur mit OAuth.
+      PLUGINS_YOUTUBE_CLIENTS_0: MUSIC
+      PLUGINS_YOUTUBE_CLIENTS_1: WEB
+      PLUGINS_YOUTUBE_CLIENTS_2: MWEB
+      PLUGINS_YOUTUBE_CLIENTS_3: IOS
+      PLUGINS_YOUTUBE_CLIENTS_4: ANDROID_VR
+      PLUGINS_YOUTUBE_CLIENTS_5: WEBEMBEDDED
+      PLUGINS_YOUTUBE_CLIENTS_6: TVHTML5_SIMPLY
+      PLUGINS_YOUTUBE_CLIENTS_7: TV
+      PLUGINS_YOUTUBE_REMOTECIPHER_URL: http://yt-cipher:8001
+      PLUGINS_YOUTUBE_REMOTECIPHER_PASSWORD: dev-password
+      PLUGINS_YOUTUBE_REMOTECIPHER_USERAGENT: bonsai-bot
+      # Nur nötig, wenn YouTube die IP des Servers blockiert.
+      PLUGINS_YOUTUBE_OAUTH_ENABLED: ${YOUTUBE_OAUTH_ENABLED:-false}
+      PLUGINS_YOUTUBE_OAUTH_REFRESHTOKEN: ${YOUTUBE_OAUTH_REFRESH_TOKEN:-}
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'curl -fsS -o /dev/null -H "Authorization: $$LAVALINK_SERVER_PASSWORD" http://127.0.0.1:2333/version'
+      interval: 15s
+      timeout: 5s
+      start_period: 60s
+      retries: 4
+
+  yt-cipher:
+    image: ghcr.io/kikkia/yt-cipher@sha256:4c5ec381ff57336cfc24822d2b526a5ad7cd0171f61065a1bbc87bb736842449
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      API_TOKEN: dev-password
+      OVERRIDE_SCRIPT_VARIANT: IAS
+      # Das Dateisystem ist schreibgeschützt, der Player-Cache liegt deshalb im Arbeitsspeicher.
+      XDG_CACHE_HOME: /tmp/cache
+
+  # Bringt die Datenbank des Bots auf den aktuellen Stand und beendet sich dann.
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: migrate
+    restart: "no"
+    environment:
+      DATABASE_URL: file:/data/data.db
+    volumes:
+      - bot-data:/data
+
+  bot:
+    build:
+      context: .
+      dockerfile: apps/bot/Dockerfile
+      target: runner
+    restart: unless-stopped
+    command: ["bun", "--watch", "src/index.ts"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      lavalink:
+        condition: service_healthy
+    env_file:
+      - apps/bot/.env
+    environment:
+      BOT_INTERNAL_HOST: 0.0.0.0
+      BOT_INTERNAL_PORT: 3002
+      DATABASE_URL: file:/data/data.db
+      LAVALINK_HOST: lavalink
+      LAVALINK_PORT: 2333
+      LAVALINK_PASSWORD: dev-password
+      WEB_SERVER_URL: http://localhost:3000
+    volumes:
+      - ./apps/bot/src:/app/apps/bot/src:ro
+      # Bewusst nicht packages/database/data.db: Greifen Mac und Container gleichzeitig auf
+      # dieselbe SQLite-Datei zu, wird sie beschädigt. Die Warteschlange liegt deshalb hier.
+      - bot-data:/data
+    ports:
+      # Die lokale API erreicht den Bot über BOT_INTERNAL_URL=http://127.0.0.1:3002.
+      - 127.0.0.1:3002:3002
+
+volumes:
+  bot-data:

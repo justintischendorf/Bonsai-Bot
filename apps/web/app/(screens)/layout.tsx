@@ -46,7 +46,7 @@ export default function DashboardLayout({
           {isDiscordServerInfoLoading ? (
             <Skeleton className="w-42 h-8 rounded-full" />
           ) : (
-            <div className="flex h-8 min-w-0 items-center gap-2 rounded-full border border-accent pl-1 pr-3">
+            <div className="flex h-8 min-w-0 items-center gap-2 rounded-full border border-accent pl-1 pr-1 min-[360px]:pr-3">
               <Image
                 loading="eager"
                 src={serverDiscordInfoResponse?.data?.server.iconUrl || ""}
@@ -55,7 +55,7 @@ export default function DashboardLayout({
                 height={24}
                 className="shrink-0 rounded-full"
               ></Image>
-              <span className="min-w-0 truncate text-sm font-medium">
+              <span className="min-w-0 truncate text-sm font-medium max-[359px]:hidden">
                 {serverDiscordInfoResponse?.data?.server.name}
               </span>
             </div>

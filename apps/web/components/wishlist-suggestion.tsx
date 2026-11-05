@@ -32,7 +32,7 @@ export default function WishlistSuggestion({
   return (
     <article
       className={cn(
-        "flex w-full flex-col justify-center rounded-xl border p-3 sm:w-1/4",
+        "flex w-full flex-col justify-center rounded-xl border p-3 sm:w-1/2 lg:w-1/4",
         className,
       )}
     >
@@ -61,7 +61,7 @@ export default function WishlistSuggestion({
                 >
                   <Link
                     href={link}
-                    className="group flex w-fit items-center gap-1 text-xs font-medium text-muted-foreground transition-colors duration-300 hover:text-bonsai-leaf-light"
+                    className="group -my-0.5 flex w-fit items-center gap-1 py-0.5 text-xs font-medium text-muted-foreground transition-colors duration-300 hover:text-bonsai-leaf-light"
                   >
                     {name}
                     <MoveRight className="size-3.5 transition-transform duration-300 group-hover:translate-x-1" />

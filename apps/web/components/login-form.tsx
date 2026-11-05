@@ -56,7 +56,7 @@ export function LoginForm({
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Willkommen zurück</CardTitle>
           <CardDescription>
-            Melden dich mit deinen Discord-Account an, um fortzufahren.
+            Melde dich mit deinem Discord-Account an, um fortzufahren.
           </CardDescription>
         </CardHeader>
         <CardContent>

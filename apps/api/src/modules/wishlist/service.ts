@@ -5,6 +5,7 @@ import type { WishlistModel as WishlistItem } from "@repo/database/src/types";
 import { createLogger } from "@repo/logger";
 
 import { IdParams } from "../../global/model";
+import { DiscordService } from "../discord/service";
 import { WishlistModel } from "./model";
 
 const logger = createLogger("api:wishlist");
@@ -19,6 +20,9 @@ const priceFormatter = new Intl.NumberFormat("de-DE", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
+
+// Preise bei Instant Gaming schwanken oft um wenige Cent, das soll nicht alle 30 Minuten eine Nachricht auslösen.
+const MIN_PRICE_DROP_PERCENT = 5;
 
 export abstract class WishlistService {
   // --------------------------------------------------------------------------> GET api/wishlist
@@ -122,45 +126,103 @@ export abstract class WishlistService {
     const wishlistItems = await prisma.wishlist.findMany();
 
     for (const game of wishlistItems) {
-      let steam: WishlistModel["ScrapedShop"] | null = null;
-      let instantGaming: WishlistModel["ScrapedShop"] | null = null;
-
-      if (game.steamLink) {
-        try {
-          steam = await scrapeSteam(game.steamLink);
-        } catch {
-          throw new Error("STEAM_SCRAPING_FAILED");
-        }
-      }
-
-      if (game.instantGamingLink) {
-        try {
-          instantGaming = await scrapeInstantGaming(game.instantGamingLink);
-        } catch {
-          throw new Error("INSTANT_GAMING_SCRAPING_FAILED");
-        }
-      }
+      const steam = game.steamLink
+        ? await scrapeShop(scrapeSteam, game.steamLink)
+        : null;
+      const instantGaming = game.instantGamingLink
+        ? await scrapeShop(scrapeInstantGaming, game.instantGamingLink)
+        : null;
+      const steamLinkBroken = Boolean(game.steamLink) && !steam;
+      const instantGamingLinkBroken =
+        Boolean(game.instantGamingLink) && !instantGaming;
 
       const name = steam?.name || instantGaming?.name || game.name;
       const description =
         steam?.description || instantGaming?.description || game.description;
       const releaseDate =
-        steam || instantGaming
-          ? steam?.releaseDate || instantGaming?.releaseDate || null
-          : game.releaseDate;
+        steam?.releaseDate ||
+        instantGaming?.releaseDate ||
+        (steamLinkBroken || instantGamingLinkBroken ? game.releaseDate : null);
+      // Without a fresh value the last known price stays, the card shows the hint next to it.
+      const steamPrice = steam ? steam.price : game.steamPrice;
+      const instantGamingPrice = instantGaming
+        ? instantGaming.price
+        : game.instantGamingPrice;
 
       await prisma.wishlist.update({
         where: { id: game.id },
         data: {
           name,
           description,
-          steamPrice: steam?.price ?? null,
-          instantGamingPrice: instantGaming?.price ?? null,
+          steamPrice,
+          instantGamingPrice,
+          steamLinkBroken,
+          instantGamingLinkBroken,
           releaseDate,
         },
       });
+
+      const priceDrops = [
+        describePriceDrop("Steam", game.steamPrice, steamPrice),
+        describePriceDrop(
+          "Instant Gaming",
+          game.instantGamingPrice,
+          instantGamingPrice,
+        ),
+      ].filter((drop) => drop !== null);
+
+      if (priceDrops.length > 0) await notifyPriceDrop(name, priceDrops);
     }
   }
+}
+
+// Returns null if the page is unreachable or unreadable, so one dead link can't stop the update of the other games
+async function scrapeShop(
+  scrape: (url: string) => Promise<WishlistModel["ScrapedShop"]>,
+  url: string,
+) {
+  try {
+    const shop = await scrape(url);
+    if (!shop.name || Number.isNaN(shop.price)) {
+      throw new Error("UNREADABLE_PAGE");
+    }
+    return shop;
+  } catch (error) {
+    logger.warn(`scraping failed: ${url} (${(error as Error).message})`);
+    return null;
+  }
+}
+
+// Returns a line like "Steam: 19,50 € → 14,99 €", or null if the price did not drop noticeably
+function describePriceDrop(
+  shop: string,
+  oldPrice: number | null,
+  newPrice: number | null,
+) {
+  if (oldPrice === null || newPrice === null) return null;
+  if (newPrice > oldPrice * (1 - MIN_PRICE_DROP_PERCENT / 100)) return null;
+
+  return `${shop}: ~~${priceFormatter.format(oldPrice)} €~~ → **${priceFormatter.format(newPrice)} €**`;
+}
+
+// A failed message must not stop the price update of the remaining games
+async function notifyPriceDrop(name: string, priceDrops: string[]) {
+  const channelId = process.env.WISHLIST_CHANNEL_ID;
+  if (!channelId) {
+    logger.warn(`${name} wurde reduziert, aber WISHLIST_CHANNEL_ID fehlt`);
+    return;
+  }
+
+  const wishlistUrl = new URL("/wishlist", process.env.WEB_SERVER_URL);
+  const content = [
+    `🏷️ **${name}** wurde reduziert!`,
+    ...priceDrops,
+    wishlistUrl.href,
+  ].join("\n");
+
+  await DiscordService.sendChannelMessage(channelId, content).catch(() =>
+    logger.error(`Preis-Nachricht für ${name} fehlgeschlagen`),
+  );
 }
 
 // Format the prices for display, e.g. 1234.5 becomes "1.234,50"

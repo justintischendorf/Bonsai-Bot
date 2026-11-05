@@ -1,0 +1,28 @@
+# Abhängigkeiten und Build-Ausgaben werden im Image neu erzeugt
+**/node_modules
+**/.turbo
+**/.next
+**/dist
+**/build
+**/coverage
+**/*.tsbuildinfo
+packages/database/generated
+
+# Secrets und lokale Daten dürfen nie ins Image
+**/.env
+**/.env.*
+**/*.pem
+**/*.db
+**/*.db-journal
+**/*.db-shm
+**/*.db-wal
+
+# Nicht für den Build nötig
+.git
+.github
+.vscode
+**/.DS_Store
+**/README.md
+**/Dockerfile
+.dockerignore
+docker-compose*.yml

@@ -81,9 +81,26 @@ model Wishlist {
   instantGamingPrice Float?
   steamLink          String?
   instantGamingLink  String?
+  steamLinkBroken    Boolean  @default(false)
+  instantGamingLinkBroken Boolean @default(false)
   releaseDate        String?
   createdBy          String
   createdAt          DateTime @default(now())
 
   @@map("wishlist")
+}
+
+model MusicQueue {
+  id        Int      @id @default(autoincrement())
+  title     String
+  artist    String
+  url       String
+  duration  Int
+  artworkUrl String?
+  position  Int      @default(0)
+  encodedTrack String
+  requestedBy String
+  createdAt DateTime @default(now())
+
+  @@map("music_queue")
 }

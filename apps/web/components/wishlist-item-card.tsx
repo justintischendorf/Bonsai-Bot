@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MoveRight, Trash2 } from "lucide-react";
+import { MoveRight, Trash2, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { wishlistQueryKey, type WishlistItem } from "@/hooks/use-wishlist";
-import { apiClient } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import { apiClient } from "@repo/api-client";
 
 import { toast } from "./ui/toast";
 
@@ -30,11 +30,17 @@ export default function WishlistItemCard({
   const queryClient = useQueryClient();
 
   const shops = [
-    { name: "Steam", link: item.steamLink, price: item.steamPrice },
+    {
+      name: "Steam",
+      link: item.steamLink,
+      price: item.steamPrice,
+      isLinkBroken: item.steamLinkBroken,
+    },
     {
       name: "Instant Gaming",
       link: item.instantGamingLink,
       price: item.instantGamingPrice,
+      isLinkBroken: item.instantGamingLinkBroken,
     },
   ];
 
@@ -133,23 +139,29 @@ export default function WishlistItemCard({
       )}
       <div className="mt-auto flex flex-col gap-1">
         {shops.map(
-          ({ name, link, price }) =>
+          ({ name, link, price, isLinkBroken }) =>
             link && (
-              <div
-                key={name}
-                className="flex items-baseline justify-between gap-2"
-              >
-                <Link
-                  href={link}
-                  className="group flex w-fit items-center gap-1 text-sm font-medium text-muted-foreground transition-colors duration-300 hover:text-bonsai-leaf-light"
-                >
-                  {name}
-                  <MoveRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-                </Link>
-                {price !== null && (
-                  <span className="shrink-0 text-sm font-medium text-bonsai-leaf-light">
-                    {price} €
-                  </span>
+              <div key={name} className="flex flex-col gap-0.5">
+                <div className="flex items-baseline justify-between gap-2">
+                  <Link
+                    href={link}
+                    className="group -my-0.5 flex w-fit items-center gap-1 py-0.5 text-sm font-medium text-muted-foreground transition-colors duration-300 hover:text-bonsai-leaf-light"
+                  >
+                    {name}
+                    <MoveRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
+                  </Link>
+                  {price !== null && (
+                    <span className="shrink-0 text-sm font-medium text-bonsai-leaf-light">
+                      {price} €
+                    </span>
+                  )}
+                </div>
+                {isLinkBroken && (
+                  <p className="flex items-start gap-1 text-xs text-amber-500">
+                    <TriangleAlert className="mt-px size-3.5 shrink-0" />
+                    Link konnte zuletzt nicht gelesen werden, der Preis ist
+                    vielleicht veraltet.
+                  </p>
                 )}
               </div>
             ),

@@ -16,6 +16,7 @@ import {
 const pageLabels: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/wishlist": "Wunschliste",
+  "/bonsai-fm": "Bonsai FM",
   "/settings": "Einstellungen",
 };
 
@@ -23,11 +24,12 @@ export function Navigation() {
   const currentPath = usePathname();
 
   return (
-    <Breadcrumb>
-      <BreadcrumbList>
+    <Breadcrumb className="shrink-0">
+      <BreadcrumbList className="flex-nowrap whitespace-nowrap">
         <BreadcrumbItem>
           <BreadcrumbLink
             aria-label="Dashboard"
+            className="-m-1 inline-block p-1"
             render={<Link href="/dashboard" />}
           >
             {currentPath === "/dashboard" ? (

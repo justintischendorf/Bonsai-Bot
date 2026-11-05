@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { apiClient } from "@/lib/api-client";
+import { apiClient } from "@repo/api-client";
 
 export const wishlistSuggestionQueryKey = ["wishlist-suggestion"];
 export const wishlistSuggestionQueryFn = () =>

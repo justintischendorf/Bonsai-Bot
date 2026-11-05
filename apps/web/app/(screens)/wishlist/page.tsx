@@ -107,7 +107,7 @@ export default function Wishlist() {
     <div ref={pageRef} className="flex flex-col gap-5 px-4 sm:px-8 xl:px-20">
       <div className="flex min-w-0 items-center gap-4">
         <BonsaiLogo className="size-14 shrink-0 sm:size-16" />
-        <h1 className="text-4xl font-bold uppercase text-bonsai-pot-light sm:text-5xl">
+        <h1 className="text-3xl font-bold uppercase text-bonsai-pot-light min-[375px]:text-4xl sm:text-5xl">
           Wunschliste
         </h1>
       </div>

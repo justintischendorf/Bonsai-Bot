@@ -156,7 +156,7 @@ export default function DashboardPage() {
 
   return (
     <main ref={pageRef}>
-      <div className="flex-col sm:flex-row sm:h-25 flex gap-5 pb-5 px-4 sm:px-8 xl:px-20">
+      <div className="flex-col sm:flex-row flex gap-5 pb-5 px-4 sm:px-8 xl:px-20">
         <WishlistSuggestion className="intro-card opacity-0" />
         <NowPlaying className="intro-card opacity-0" />
       </div>
