@@ -1,6 +1,7 @@
-# Start:            docker compose -f docker-compose-prod.yml up -d --build
+# Für Dokploy (Typ "Docker Compose", Isolated Deployments aus). Anleitung: README, Abschnitt "Produktion".
+# Domains:          in Dokploy dieselbe Domain für web (Pfad /, Port 3000) und api (Pfad /api, Port 3001)
 # Slash-Commands:   docker compose -f docker-compose-prod.yml run --rm deploy-commands
-# Konfiguration:    .env.example nach .env kopieren und ausfüllen
+# Konfiguration:    Variablen aus .env.example im Environment-Tab von Dokploy setzen
 
 name: bonsai-bot
 
@@ -79,9 +80,12 @@ services:
       BOT_INTERNAL_SECRET: ${BOT_INTERNAL_SECRET:?in .env setzen}
     volumes:
       - database:/data
-    ports:
-      # Standardmäßig nur lokal erreichbar, davor gehört ein Reverse Proxy mit HTTPS.
-      - ${API_BIND_ADDRESS:-127.0.0.1}:${API_PUBLIC_PORT:-3001}:3001
+    # Keine "ports": Traefik von Dokploy erreicht die API über das dokploy-network.
+    expose:
+      - "3001"
+    labels:
+      # Der Container hängt in mehreren Netzen, Traefik muss das richtige verwenden.
+      - traefik.docker.network=dokploy-network
     networks:
       - egress
       - internal
@@ -116,8 +120,12 @@ services:
       DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:?in .env setzen}
     volumes:
       - database:/data
-    ports:
-      - ${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PUBLIC_PORT:-3000}:3000
+    # Keine "ports": Port 3000 auf dem Server belegt Dokploy selbst.
+    expose:
+      - "3000"
+    labels:
+      # Der Container hängt in mehreren Netzen, Traefik muss das richtige verwenden.
+      - traefik.docker.network=dokploy-network
     networks:
       - egress
 
