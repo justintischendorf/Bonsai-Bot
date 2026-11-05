@@ -11,7 +11,10 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "discord.js": "^14.27.0"
+    "@repo/api-client": "workspace:*",
+    "@repo/database": "workspace:*",
+    "discord.js": "^14.27.0",
+    "lavalink-client": "^2.11.0"
   },
   "devDependencies": {
     "@types/bun": "latest",

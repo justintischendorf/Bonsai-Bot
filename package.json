@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter=web --filter=@repo/api",
     "lint": "oxlint",
     "format": "oxfmt .",
     "check-types": "turbo run check-types",
@@ -11,7 +11,8 @@
     "db:generate": "turbo run db:generate",
     "db:migrate": "cd packages/database && bunx prisma migrate dev",
     "db:migrate:reset": "cd packages/database && bunx prisma migrate reset --force",
-    "docker": "docker compose -f docker-compose.yml up --build -d",
+    "docker:dev": "docker compose -f docker-compose-dev.yml up --build -d",
+    "docker:prod": "docker compose -f docker-compose-prod.yml up --build -d",
     "format:check": "oxfmt --check .",
     "lint:fix": "oxlint --fix"
   },

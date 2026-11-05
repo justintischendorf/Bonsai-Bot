@@ -12,6 +12,12 @@ node_modules
 .env.test.local
 .env.production.local
 
+# Local databases
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
 # Testing
 coverage
 

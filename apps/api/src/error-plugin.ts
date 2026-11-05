@@ -4,6 +4,61 @@ import { createLogger } from "@repo/logger";
 
 const logger = createLogger("api:error");
 
+const MUSIC_ERRORS: Record<string, { status: number; message: string }> = {
+  USER_NOT_IN_VOICE: {
+    status: 409,
+    message: "Du musst zuerst einem Voice-Channel beitreten",
+  },
+  BOT_UNAVAILABLE: {
+    status: 503,
+    message: "Der Bot ist gerade nicht erreichbar",
+  },
+  BOT_NOT_IN_VOICE: {
+    status: 409,
+    message: "Starte zuerst eine Jam, damit der Bot im Voice-Channel ist",
+  },
+  VOICE_CONNECT_FAILED: {
+    status: 502,
+    message: "Der Bot konnte dem Voice-Channel nicht beitreten",
+  },
+  LAVALINK_UNAVAILABLE: {
+    status: 503,
+    message: "Der Musikserver ist gerade nicht erreichbar",
+  },
+  QUEUE_EMPTY: {
+    status: 409,
+    message: "Die Warteschlange ist leer",
+  },
+  NOTHING_PLAYING: {
+    status: 409,
+    message: "Gerade läuft kein Song",
+  },
+  SONG_INPUT_REQUIRED: {
+    status: 400,
+    message: "Gib einen Song-Namen oder einen Link an",
+  },
+  INVALID_SONG_URL: {
+    status: 400,
+    message: "Bitte gib einen gültigen YouTube-Link zu einem Video an",
+  },
+  SONG_IS_STREAM: {
+    status: 400,
+    message: "Livestreams können nicht abgespielt werden",
+  },
+  SONG_NOT_FOUND: {
+    status: 404,
+    message: "Dazu wurde kein Song gefunden",
+  },
+  SONG_LOAD_FAILED: {
+    status: 502,
+    message: "Der Song konnte nicht von YouTube geladen werden",
+  },
+  SONG_NOT_IN_QUEUE: {
+    status: 404,
+    message: "Der Song ist nicht mehr in der Warteschlange",
+  },
+};
+
 export const errorPlugin = new Elysia({ name: "error" }).onError(
   { as: "global" },
   ({ code, error, set }) => {
@@ -106,6 +161,18 @@ export const errorPlugin = new Elysia({ name: "error" }).onError(
         success: false,
         message: "Seite konnte nicht abgerufen werden",
         error: "FAILED_TO_FETCH_PAGE",
+      };
+    }
+
+    const musicError =
+      error instanceof Error ? MUSIC_ERRORS[error.message] : undefined;
+    if (error instanceof Error && musicError) {
+      set.status = musicError.status;
+      logger.warn(`Musikfehler: ${error.message}`);
+      return {
+        success: false,
+        message: musicError.message,
+        error: error.message,
       };
     }
 

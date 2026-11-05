@@ -7,7 +7,10 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   images: {
-    remotePatterns: [{ protocol: "https", hostname: "cdn.discordapp.com" }],
+    remotePatterns: [
+      { protocol: "https", hostname: "cdn.discordapp.com" },
+      { protocol: "https", hostname: "i.ytimg.com" },
+    ],
   },
   redirects() {
     return [{ source: "/", destination: "/dashboard", permanent: false }];

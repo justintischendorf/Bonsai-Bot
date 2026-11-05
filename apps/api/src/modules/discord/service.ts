@@ -68,6 +68,26 @@ function getAvatarUrl({ id, avatar }: DiscordModel["Member"]["user"]) {
 }
 
 export abstract class DiscordService {
+  static async sendChannelMessage(channelId: string, content: string) {
+    const res = await fetch(
+      `https://discord.com/api/v10/channels/${channelId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        // Der Text enthält fremde Daten wie Spielnamen, die niemanden anpingen dürfen.
+        body: JSON.stringify({ content, allowed_mentions: { parse: [] } }),
+      },
+    );
+
+    if (!res.ok) {
+      logger.error(`discord message failed: status=${res.status}`);
+      throw new Error("DISCORD_REQUEST_FAILED");
+    }
+  }
+
   static async getServer() {
     const guild = await discord<DiscordModel["Guild"]>("?with_counts=true");
 
