@@ -1,159 +1,115 @@
-# Turborepo starter
+# Bonsai Bot
 
-This Turborepo starter is maintained by the Turborepo core team.
+Discord-Bot mit Web-Dashboard für einen einzelnen Discord-Server. Mitglieder melden sich mit ihrem Discord-Account an, verwalten eine gemeinsame Spiele-Wunschliste und steuern die Musik im Voice-Channel über die Website.
 
-## Using this example
+## Funktionen
 
-Run the following command:
+- **Discord-Login:** Anmeldung per Discord, nur für Mitglieder des konfigurierten Servers
+- **Dashboard:** Serverinfos, Mitgliederliste und täglicher Spielevorschlag aus der Wunschliste
+- **Wunschliste:** Spiele per Steam- oder Instant-Gaming-Link hinzufügen, Preise werden alle 30 Minuten aktualisiert, Preissenkungen werden in einem Discord-Channel gemeldet
+- **Bonsai FM:** Warteschlange mit YouTube-Links, dazu Beitreten, Verlassen, Abspielen, Stoppen und Überspringen über die Website
+- **Slash-Commands:** `/ping` und `/link`
 
-```sh
-npx create-turbo@latest
-```
+## Aufbau
 
-## What's inside?
+| Pfad                  | Inhalt                                         |
+| --------------------- | ---------------------------------------------- |
+| `apps/web`            | Web-Dashboard (Next.js, React)                 |
+| `apps/api`            | API (Elysia)                                   |
+| `apps/bot`            | Discord-Bot (discord.js, lavalink-client)      |
+| `packages/database`   | Prisma-Schema, Migrationen und Client (SQLite) |
+| `packages/auth`       | Better-Auth-Konfiguration                      |
+| `packages/api-client` | API-Client für das Web-Dashboard               |
+| `packages/treaty`     | Eden-Treaty-Anbindung an die API               |
+| `packages/logger`     | Gemeinsames Logging                            |
 
-This Turborepo includes the following packages/apps:
+Für die Musikwiedergabe kommen zusätzlich Lavalink und yt-cipher als Docker-Container zum Einsatz.
 
-### Apps and Packages
+## Voraussetzungen
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `@next/eslint-plugin-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+- [Bun](https://bun.sh) 1.4.2
+- Node.js 24 oder neuer
+- Docker mit Docker Compose
+- Eine Anwendung im [Discord Developer Portal](https://discord.com/developers/applications) mit Bot und OAuth2
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+## Lokale Entwicklung
 
-### Utilities
+1. Abhängigkeiten installieren:
 
-This Turborepo has some additional tools already setup for you:
+   ```sh
+   bun install
+   ```
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+2. Die `.env.example` in diesen Ordnern jeweils nach `.env` kopieren und ausfüllen:
+   - `apps/api`
+   - `apps/bot`
+   - `apps/web`
+   - `packages/api-client`
+   - `packages/database`
 
-### Build
+3. Prisma-Client erzeugen und Datenbank anlegen:
 
-To build all apps and packages, run the following command:
+   ```sh
+   bun run db:generate
+   bun run db:migrate
+   ```
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+4. Bot, Lavalink und yt-cipher in Docker starten:
 
-```sh
-cd my-turborepo
-turbo build
-```
+   ```sh
+   bun run docker:dev
+   ```
 
-Without global `turbo`, use your package manager:
+5. Web-Dashboard und API starten:
 
-```sh
-cd my-turborepo
-npx turbo build
-bun exec turbo build
-bun exec turbo build
-```
+   ```sh
+   bun run dev
+   ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+   Das Dashboard läuft auf `http://localhost:3000`, die API auf `http://localhost:3001`.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+6. Slash-Commands einmalig oder nach Änderungen registrieren:
 
-```sh
-turbo build --filter=docs
-```
+   ```sh
+   cd apps/bot
+   bun run deploy
+   ```
 
-Without global `turbo`:
+## Produktion
 
-```sh
-npx turbo build --filter=docs
-bun exec turbo build --filter=docs
-bun exec turbo build --filter=docs
-```
+1. `.env.example` im Projektordner nach `.env` kopieren und mit eigenen Werten und HTTPS-Adressen ausfüllen.
 
-### Develop
+2. Stack bauen und starten:
 
-To develop all apps and packages, run the following command:
+   ```sh
+   docker compose -f docker-compose-prod.yml up -d --build
+   ```
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+3. Slash-Commands registrieren:
 
-```sh
-cd my-turborepo
-turbo dev
-```
+   ```sh
+   docker compose -f docker-compose-prod.yml run --rm deploy-commands
+   ```
 
-Without global `turbo`, use your package manager:
+Web-Dashboard und API sind standardmäßig nur lokal auf den Ports `3000` und `3001` erreichbar. Davor gehört ein Reverse Proxy mit HTTPS.
 
-```sh
-cd my-turborepo
-npx turbo dev
-bun exec turbo dev
-bun exec turbo dev
-```
+Falls YouTube die IP des Servers blockiert, lässt sich in der `.env` optional OAuth aktivieren. Die Variablen dafür stehen in der `.env.example`.
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+## Befehle
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+| Befehl                | Beschreibung                        |
+| --------------------- | ----------------------------------- |
+| `bun run dev`         | Web-Dashboard und API starten       |
+| `bun run build`       | Alle Apps bauen                     |
+| `bun run lint`        | Code mit oxlint prüfen              |
+| `bun run format`      | Code mit oxfmt formatieren          |
+| `bun run check-types` | Typen prüfen                        |
+| `bun run db:generate` | Prisma-Client erzeugen              |
+| `bun run db:migrate`  | Migrationen erstellen und anwenden  |
+| `bun run db:studio`   | Prisma Studio öffnen                |
+| `bun run docker:dev`  | Entwicklungs-Container starten      |
+| `bun run docker:prod` | Produktions-Stack bauen und starten |
 
-```sh
-turbo dev --filter=web
-```
+## Sicherheit
 
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-bun exec turbo dev --filter=web
-bun exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-bun exec turbo login
-bun exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-bun exec turbo link
-bun exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+`.env`-Dateien und `*.db`-Dateien dürfen nicht committet werden, sie sind per `.gitignore` ausgeschlossen. Die lokale Datenbank enthält Sessions und Discord-Tokens.
