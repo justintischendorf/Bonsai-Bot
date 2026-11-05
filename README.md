@@ -77,21 +77,32 @@ Für die Musikwiedergabe kommen zusätzlich Lavalink und yt-cipher als Docker-Co
 
 ## Produktion
 
-1. `.env.example` im Projektordner nach `.env` kopieren und mit eigenen Werten und HTTPS-Adressen ausfüllen.
+Das Deployment läuft über [Dokploy](https://dokploy.com) mit der Datei `docker-compose-prod.yml`.
 
-2. Stack bauen und starten:
+1. In Dokploy einen Service vom Typ **Docker Compose** anlegen, nicht **Stack**. Als Compose Path `./docker-compose-prod.yml` eintragen und **Isolated Deployments** ausgeschaltet lassen.
 
-   ```sh
-   docker compose -f docker-compose-prod.yml up -d --build
-   ```
+2. Die Variablen aus der `.env.example` im Environment-Tab setzen. `WEB_SERVER_URL` und `BETTER_AUTH_URL` bekommen dieselbe Adresse, zum Beispiel `https://bonsai.example.com`.
 
-3. Slash-Commands registrieren:
+3. Im Domains-Tab zwei Einträge mit derselben Domain anlegen:
+
+   | Service | Pfad   | Port   | Strip Path |
+   | ------- | ------ | ------ | ---------- |
+   | `web`   | `/`    | `3000` | aus        |
+   | `api`   | `/api` | `3001` | aus        |
+
+4. Im Discord Developer Portal unter OAuth2 diese Redirect-URL eintragen: `https://bonsai.example.com/api/auth/callback/discord`
+
+5. Deployen.
+
+6. Slash-Commands einmalig und nach Änderungen auf dem Server registrieren, im Ordner mit der Compose-Datei und der `.env`:
 
    ```sh
    docker compose -f docker-compose-prod.yml run --rm deploy-commands
    ```
 
-Web-Dashboard und API sind standardmäßig nur lokal auf den Ports `3000` und `3001` erreichbar. Davor gehört ein Reverse Proxy mit HTTPS.
+Web-Dashboard und API müssen unter derselben Domain laufen, weil das Web-Dashboard das Session-Cookie der API selbst prüft. Auf getrennten Subdomains käme das Cookie dort nicht an. Eine Änderung von `BETTER_AUTH_URL` erfordert einen neuen Build, weil die Adresse fest ins Frontend geschrieben wird.
+
+Sichern lassen sich die Daten über die Volume Backups von Dokploy, betroffen sind die Volumes `database` und `bot-data`.
 
 Falls YouTube die IP des Servers blockiert, lässt sich in der `.env` optional OAuth aktivieren. Die Variablen dafür stehen in der `.env.example`.
 
