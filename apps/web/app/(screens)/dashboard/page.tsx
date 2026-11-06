@@ -4,36 +4,49 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
-import { ChevronDown, MoveRight } from "lucide-react";
+import { Gamepad2, MoveRight, Radio } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 import bonsaiBotTitle from "@/assets/logos/bonsai-bot-title.svg";
 import { BonsaiLogo } from "@/components/bonsai-logo";
 import MemberCard, { MemberCardSkeleton } from "@/components/member-card";
 import NowPlaying from "@/components/now-playing";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import WishlistSuggestion from "@/components/wishlist-suggestion";
 import { useDiscordMemberInfo } from "@/hooks/use-discord-member-info";
 import { useFloatToTextBottom } from "@/hooks/use-float-to-text-bottom";
 import { useLimitVisibleItems } from "@/hooks/use-limit-visible-items";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { useMusicQueue } from "@/hooks/use-music-queue";
+import { useWishlistSuggestion } from "@/hooks/use-wishlist-suggestion";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 
 const MAX_VISIBLE_MEMBERS = 12;
+const MAX_VISIBLE_MEMBERS_MOBILE = 5;
+
+const PAGE_LINKS = [
+  {
+    href: "/wishlist",
+    title: "Wunschliste",
+    description: "Spiele sammeln und Preise vergleichen",
+    Icon: Gamepad2,
+  },
+  {
+    href: "/bonsai-fm",
+    title: "Bonsai FM",
+    description: "Jam starten und Musik hören",
+    Icon: Radio,
+  },
+];
 
 let introPlayed = false;
 let cardsIntroPlayed = false;
 
 export default function DashboardPage() {
-  const linkStyles =
-    "intro-link opacity-0 group flex flex-1 items-center justify-start rounded-xl gap-4 px-4 py-2 transition-colors duration-300 hover:border-bonsai-leaf-light hover:text-bonsai-leaf-light";
   const { spacerRef, textRef } = useFloatToTextBottom();
-
-  const [showMembers, setShowMembers] = useState(false);
-  const previousShowMembers = useRef(showMembers);
 
   const {
     data: serverMembersResponse,
@@ -43,10 +56,16 @@ export default function DashboardPage() {
   const serverMembers = serverMembersResponse?.data?.members.toSorted(
     (a, b) => Number(b.online) - Number(a.online),
   );
+  const isMobile = useMediaQuery("(max-width: 639px)");
   const memberListRef = useLimitVisibleItems(
-    MAX_VISIBLE_MEMBERS,
+    isMobile ? MAX_VISIBLE_MEMBERS_MOBILE : MAX_VISIBLE_MEMBERS,
     serverMembers?.length ?? 0,
   );
+
+  const { data: wishlistSuggestionResponse } = useWishlistSuggestion();
+  const { data: musicResponse } = useMusicQueue();
+  const hasSuggestion = !!wishlistSuggestionResponse?.data?.server;
+  const hasSong = !!musicResponse?.data?.server?.current;
 
   const pageRef = useRef<HTMLElement>(null);
 
@@ -65,10 +84,9 @@ export default function DashboardPage() {
       );
 
       if (introPlayed) {
-        gsap.set(
-          ".intro-card, .split, .bonsai-logo, .intro-link, .member-toggle",
-          { opacity: 1 },
-        );
+        gsap.set(".intro-card, .split, .bonsai-logo, .intro-link", {
+          opacity: 1,
+        });
         return;
       }
 
@@ -129,43 +147,44 @@ export default function DashboardPage() {
           },
           "<0.2",
         )
-        .to(
-          ".bonsai-logo, .intro-link, .member-toggle",
-          { opacity: 1, duration: 1 },
-          "-=0.4",
-        );
+        .to(".bonsai-logo, .intro-link", { opacity: 1, duration: 1 }, "-=0.4");
     },
     { scope: pageRef },
   );
 
   useGSAP(
     () => {
-      const toggled = previousShowMembers.current !== showMembers;
-      previousShowMembers.current = showMembers;
+      gsap.to(".status-card", { opacity: 1, stagger: 0.1 });
+    },
+    { scope: pageRef, dependencies: [hasSuggestion, hasSong] },
+  );
 
-      if (isDiscordServerMembersLoading || (cardsIntroPlayed && !toggled))
-        return;
+  useGSAP(
+    () => {
+      if (isDiscordServerMembersLoading || cardsIntroPlayed) return;
       cardsIntroPlayed = true;
       gsap.fromTo(".stagger", { opacity: 0 }, { opacity: 1, stagger: 0.1 });
     },
     {
       scope: pageRef,
-      dependencies: [isDiscordServerMembersLoading, showMembers],
+      dependencies: [isDiscordServerMembersLoading],
     },
   );
 
   return (
     <main ref={pageRef}>
-      <div className="flex-col sm:flex-row flex gap-5 pb-5 px-4 sm:px-8 xl:px-20">
-        <WishlistSuggestion className="intro-card opacity-0" />
-        <NowPlaying className="intro-card opacity-0" />
-      </div>
-      <div className="flex flex-col gap-10 items-start justify-center lg:flex-row lg:gap-0">
-        <div className="w-full flex flex-col px-4 sm:px-8 lg:w-1/2 xl:px-20">
+      {(hasSuggestion || hasSong) && (
+        <div className="flex-col sm:flex-row flex gap-5 pb-5 px-4 sm:px-8 xl:px-20">
+          <WishlistSuggestion className="status-card opacity-0" />
+          <NowPlaying className="status-card opacity-0" />
+        </div>
+      )}
+      <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-x-0 lg:gap-y-16">
+        <div className="w-full flex flex-col px-4 sm:px-8 lg:col-start-1 lg:row-start-1 xl:px-20">
           <Image
             loading="eager"
             id="heading"
-            className="intro-card opacity-0"
+            className="intro-card opacity-0 h-auto w-full max-w-125"
             src={bonsaiBotTitle}
             alt="Bonsai Bot"
             width={500}
@@ -181,62 +200,61 @@ export default function DashboardPage() {
               Discord-Servers: unscheinbar, aber immer zur Stelle. Er zeigt dir
               auf einen Blick, was auf dem Server los ist und{" "}
               <strong>wer gerade online ist</strong>, sodass du sofort siehst,
-              ob sich noch jemand für eine Runde findet. Steht der nächste
-              Spielekauf an, vergleicht er die Preise auf <strong>Steam</strong>{" "}
-              und <strong>Instant Gaming</strong> und findet das{" "}
-              <strong>günstigste Angebot</strong>, damit am Ende mehr fürs
-              nächste Spiel übrig bleibt. Außerdem sammelt er alle{" "}
-              <strong>Spiele, die wir zusammen spielen wollen</strong>. So geht
-              keine gute Idee mehr im Chat unter, und die Frage „Was zocken wir
-              heute?“ ist schnell beantwortet.
+              ob sich noch jemand für eine Runde findet. Außerdem sammelt er
+              alle <strong>Spiele, die wir zusammen spielen wollen</strong>, und
+              schlägt jeden Tag eines davon als{" "}
+              <strong>heutige Empfehlung</strong> vor. So geht keine gute Idee
+              mehr im Chat unter, und die Frage „Was zocken wir heute?“ ist
+              schnell beantwortet. Steht der nächste Spielekauf an, vergleicht
+              er die Preise auf <strong>Steam</strong> und{" "}
+              <strong>Instant Gaming</strong> und findet das{" "}
+              <strong>günstigste Angebot</strong>. Wird ein Spiel deutlich
+              günstiger, <strong>meldet er sich im Discord</strong>, damit am
+              Ende mehr fürs nächste Spiel übrig bleibt. Und wenn ihr zusammen
+              im Voice-Channel sitzt, sorgt er mit <strong>Bonsai FM</strong>{" "}
+              für die passende Musik.
             </p>
           </div>
-          <nav
-            aria-label="Seiten"
-            className="mt-10 flex flex-col sm:gap-4 text-lg leading-relaxed text-pretty sm:flex-row lg:mt-20"
-          >
-            <Link href="/wishlist" className={linkStyles}>
-              Wunschliste
-              <MoveRight className="transition-transform duration-300 group-hover:translate-x-1" />
-            </Link>
-            <Link href="/bonsai-fm" className={linkStyles}>
-              Bonsai FM
-              <MoveRight className="transition-transform duration-300 group-hover:translate-x-1" />
-            </Link>
-          </nav>
         </div>
-        <div className="w-full flex justify-center flex-wrap px-4 gap-2 sm:px-8 lg:w-1/2 lg:justify-end xl:px-20">
-          <div
-            className={`w-full flex justify-end items-center lg:mb-4 ${showMembers ? "mb-4" : ""}`}
-          >
-            <Button
-              className="member-toggle opacity-0 w-full lg:hidden"
-              variant="outline"
-              type="button"
-              aria-expanded={showMembers}
-              onClick={() => setShowMembers(!showMembers)}
+        <nav
+          aria-label="Seiten"
+          className="flex flex-col gap-3 px-4 sm:flex-row sm:px-8 lg:col-span-2 lg:row-start-2 lg:justify-center xl:px-20"
+        >
+          {PAGE_LINKS.map(({ href, title, description, Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className="intro-link opacity-0 group flex min-w-0 flex-1 items-center lg:w-72 lg:flex-none gap-3 rounded-xl border border-accent p-3 transition-colors duration-300 hover:border-bonsai-leaf-light"
             >
-              {showMembers
-                ? "Mitgliederliste ausblenden"
-                : "Mitgliederliste anzeigen"}
-              <ChevronDown
-                className={`transition-transform duration-300 ${showMembers ? "rotate-180" : ""}`}
-              />
-            </Button>
-            <div className="hidden lg:block">
-              {isDiscordServerMembersLoading ? (
-                <Skeleton className="w-42 h-8" />
-              ) : (
-                <p className="text-lg font-semibold">
-                  {serverMembers?.length} Mitglieder
-                </p>
-              )}
-            </div>
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-muted text-bonsai-leaf-light">
+                <Icon className="size-5" />
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="text-sm font-semibold transition-colors duration-300 group-hover:text-bonsai-leaf-light">
+                  {title}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {description}
+                </span>
+              </span>
+              <MoveRight className="size-4 shrink-0 text-muted-foreground transition-all duration-300 group-hover:translate-x-1 group-hover:text-bonsai-leaf-light" />
+            </Link>
+          ))}
+        </nav>
+        <div className="w-full flex justify-center flex-wrap px-4 gap-2 sm:px-8 lg:col-start-2 lg:row-start-1 lg:justify-end xl:px-20">
+          <div className="w-full flex justify-center items-center mb-4 lg:justify-end">
+            {isDiscordServerMembersLoading ? (
+              <Skeleton className="w-42 h-8" />
+            ) : (
+              <p className="text-lg font-semibold">
+                {serverMembers?.length} Mitglieder
+              </p>
+            )}
           </div>
 
           <div
             ref={memberListRef}
-            className={`w-full flex-wrap justify-center gap-2 overflow-y-auto lg:justify-end ${showMembers ? "flex" : "hidden lg:flex"}`}
+            className="grid w-full grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2"
           >
             {isDiscordServerMembersLoading
               ? Array.from({ length: 10 }, (_, index) => (

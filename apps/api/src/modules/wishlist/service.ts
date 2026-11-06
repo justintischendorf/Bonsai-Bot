@@ -22,7 +22,7 @@ const priceFormatter = new Intl.NumberFormat("de-DE", {
 });
 
 // Preise bei Instant Gaming schwanken oft um wenige Cent, das soll nicht alle 30 Minuten eine Nachricht auslösen.
-const MIN_PRICE_DROP_PERCENT = 5;
+const MIN_PRICE_DROP_PERCENT = 10;
 
 export abstract class WishlistService {
   // --------------------------------------------------------------------------> GET api/wishlist

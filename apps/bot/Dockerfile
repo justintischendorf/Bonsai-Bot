@@ -8,7 +8,6 @@ COPY package.json bun.lock ./
 COPY apps/api/package.json apps/api/
 COPY apps/bot/package.json apps/bot/
 COPY apps/web/package.json apps/web/
-COPY packages/api-client/package.json packages/api-client/
 COPY packages/auth/package.json packages/auth/
 COPY packages/database/package.json packages/database/
 COPY packages/logger/package.json packages/logger/

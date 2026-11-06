@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import { Music, Square } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import BonsaiFMPlayer from "@/components/bonsai-fm-player";
 import { BonsaiLogo } from "@/components/bonsai-logo";
@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/toast";
 import { musicQueueQueryKey, useMusicQueue } from "@/hooks/use-music-queue";
-import { apiClient } from "@repo/api-client";
+import { apiClient } from "@/lib/api-client";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 
@@ -30,6 +30,7 @@ export default function BonsaiFM() {
   const jamStarted = musicResponse?.data?.server.connected ?? false;
 
   const pageRef = useRef<HTMLDivElement>(null);
+  const [introStarted, setIntroStarted] = useState(introPlayed);
 
   const { mutateAsync: joinVoiceChannel, isPending: isJoiningVoiceChannel } =
     useMutation({
@@ -60,6 +61,7 @@ export default function BonsaiFM() {
       const tl = gsap.timeline({
         onStart: () => {
           introPlayed = true;
+          setIntroStarted(true);
         },
         scrollTrigger: {
           trigger: ".split",
@@ -107,8 +109,7 @@ export default function BonsaiFM() {
           },
           "<0.2",
         )
-        .to(".jam-button", { opacity: 1, duration: 1 }, "-=0.4")
-        .to(".fm-player", { opacity: 1, duration: 0.5 }, 0);
+        .to(".jam-button, .fm-player", { opacity: 1, duration: 0.5 }, 0);
     },
     { scope: pageRef },
   );
@@ -116,14 +117,14 @@ export default function BonsaiFM() {
   useGSAP(
     () => {
       if (isMusicQueueLoading || queueIntroPlayed) return;
+      if (!introStarted) {
+        gsap.set(".stagger", { opacity: 0 });
+        return;
+      }
       queueIntroPlayed = true;
-      gsap.fromTo(
-        ".stagger",
-        { opacity: 0 },
-        { opacity: 1, stagger: 0.1, delay: 0.3 },
-      );
+      gsap.fromTo(".stagger", { opacity: 0 }, { opacity: 1, stagger: 0.1 });
     },
-    { scope: pageRef, dependencies: [isMusicQueueLoading] },
+    { scope: pageRef, dependencies: [isMusicQueueLoading, introStarted] },
   );
 
   async function handleJoinChannel() {
