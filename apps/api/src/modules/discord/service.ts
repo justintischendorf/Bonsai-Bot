@@ -67,6 +67,29 @@ function getAvatarUrl({ id, avatar }: DiscordModel["Member"]["user"]) {
     : `${CDN}/embed/avatars/${(BigInt(id) >> BigInt(22)) % BigInt(6)}.png`;
 }
 
+const DEV_MEMBER_COUNT = 14;
+
+const DEV_MEMBER_PRESETS: { status: PresenceStatus; game: string | null }[] = [
+  { status: "online", game: "Minecraft" },
+  { status: "idle", game: null },
+  { status: "dnd", game: "Counter-Strike 2" },
+  { status: "online", game: null },
+  { status: "offline", game: null },
+];
+
+function withDevMembers<T extends { id: string }>(
+  members: T[],
+  createMember: (index: number) => T,
+) {
+  if (process.env.NODE_ENV === "production") return members;
+
+  const missing = Math.max(DEV_MEMBER_COUNT - members.length, 0);
+  return [
+    ...members,
+    ...Array.from({ length: missing }, (_, index) => createMember(index)),
+  ];
+}
+
 export abstract class DiscordService {
   static async sendChannelMessage(channelId: string, content: string) {
     const res = await fetch(
@@ -108,7 +131,7 @@ export abstract class DiscordService {
     ]);
     const rolesByRank = guildRoles.sort((a, b) => b.position - a.position);
 
-    return members
+    const realMembers = members
       .filter(({ user }) => !user.bot)
       .map(({ user, nick, roles, joined_at }) => {
         const { status, game } = getPresence(user.id);
@@ -127,5 +150,28 @@ export abstract class DiscordService {
           joinedAt: joined_at,
         };
       });
+
+    return withDevMembers(realMembers, (index) => {
+      const { status, game } =
+        DEV_MEMBER_PRESETS[index % DEV_MEMBER_PRESETS.length]!;
+      const id = `1000000000000000${String(index).padStart(3, "0")}`;
+
+      return {
+        id,
+        name: `Testmitglied ${index + 1}`,
+        username: `testmitglied${index + 1}`,
+        avatarUrl: getAvatarUrl({
+          id,
+          username: `testmitglied${index + 1}`,
+          global_name: null,
+          avatar: null,
+        }),
+        status,
+        online: status !== "offline",
+        game,
+        roles: [],
+        joinedAt: new Date(0).toISOString(),
+      };
+    });
   }
 }

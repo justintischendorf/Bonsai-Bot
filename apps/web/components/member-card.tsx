@@ -14,7 +14,7 @@ export default function MemberCard({
   return (
     <article
       className={cn(
-        "flex w-full items-center gap-3 rounded-xl border border-accent p-3 sm:w-70",
+        "flex w-full items-center gap-3 rounded-xl border border-accent p-3",
         className,
       )}
     >
@@ -54,7 +54,7 @@ export default function MemberCard({
 
 export function MemberCardSkeleton() {
   return (
-    <div className="flex w-full items-center gap-3 rounded-xl p-3 sm:w-70">
+    <div className="flex w-full items-center gap-3 rounded-xl p-3">
       <Skeleton className="size-10 shrink-0 rounded-full" />
       <div className="flex flex-1 flex-col gap-2">
         <Skeleton className="h-4 w-2/3" />
