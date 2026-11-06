@@ -22,6 +22,8 @@ const YOUTUBE_VIDEO_ID = /^[\w-]{11}$/;
 // Muss zu images.remotePatterns der Website passen: next/image wirft bei anderen Hosts einen Fehler.
 const ARTWORK_URL_PREFIX = "https://i.ytimg.com/";
 const QUEUE_ORDER = [{ position: "asc" }, { id: "asc" }] as const;
+const SUGGESTION_REQUESTER = "Bonsai Bot";
+const PLAYED_HISTORY_SIZE = 50;
 
 export class MusicError extends Error {
   constructor(
@@ -64,6 +66,14 @@ export function toYoutubeVideoUrl(input: string) {
   return `https://www.youtube.com/watch?v=${videoId}`;
 }
 
+function toCanonicalUrl(url: string) {
+  try {
+    return toYoutubeVideoUrl(url);
+  } catch {
+    return null;
+  }
+}
+
 export class MusicPlayer {
   private readonly manager: LavalinkManager;
   // Der laufende Song ist schon aus der Datenbank entfernt und liegt nur hier.
@@ -73,6 +83,7 @@ export class MusicPlayer {
   // Damit die Website melden kann, wenn ein Song nicht abspielbar war und übersprungen wurde.
   private lastFailure: { title: string; at: number } | null = null;
   private lastAction: Promise<unknown> = Promise.resolve();
+  private playedUrls: string[] = [];
 
   constructor(private readonly client: Client) {
     this.manager = new LavalinkManager({
@@ -350,7 +361,8 @@ export class MusicPlayer {
   private async onTrackEnded() {
     this.current = null;
     const player = this.getPlayer();
-    if (player && this.autoplay) await this.startNext(player);
+    if (!player || !this.autoplay) return;
+    if (!(await this.startNext(player))) await this.startSuggestion(player);
   }
 
   private async startNext(player: Player) {
@@ -359,11 +371,64 @@ export class MusicPlayer {
     });
     if (!next) return false;
 
+    await this.playSong(player, next);
+    await prisma.musicQueue.delete({ where: { id: next.id } });
+    return true;
+  }
+
+  private async startSuggestion(player: Player) {
+    const seedUrl = this.playedUrls.at(-1);
+    const videoId = seedUrl && new URL(seedUrl).searchParams.get("v");
+    if (!videoId) return false;
+
+    const result = await this.getNode()
+      .search(
+        {
+          query: `https://www.youtube.com/watch?v=${videoId}&list=RD${videoId}`,
+        },
+        SUGGESTION_REQUESTER,
+      )
+      .catch((error: Error) => {
+        console.error(
+          "Vorschläge konnten nicht geladen werden:",
+          error.message,
+        );
+        return null;
+      });
+
+    const track = result?.tracks.find(
+      ({ encoded, info }) =>
+        encoded &&
+        !info.isStream &&
+        info.uri &&
+        !this.playedUrls.includes(toCanonicalUrl(info.uri) ?? info.uri),
+    );
+    if (!track?.encoded) return false;
+
+    await this.playSong(player, {
+      id: 0,
+      position: 0,
+      title: track.info.title,
+      artist: track.info.author,
+      url: track.info.uri ?? "",
+      duration: Math.round(track.info.duration / 1000),
+      artworkUrl: track.info.artworkUrl?.startsWith(ARTWORK_URL_PREFIX)
+        ? track.info.artworkUrl
+        : null,
+      encodedTrack: track.encoded,
+      requestedBy: SUGGESTION_REQUESTER,
+      createdAt: new Date(),
+    });
+    return true;
+  }
+
+  private async playSong(player: Player, song: MusicQueueModel) {
     // Vor dem Start setzen: Ein Fehler kann noch während play() gemeldet werden und braucht den Titel.
-    this.current = next;
+    this.current = song;
+    this.rememberPlayed(song.url);
     try {
       await player.play({
-        track: { encoded: next.encodedTrack, requester: next.requestedBy },
+        track: { encoded: song.encodedTrack, requester: song.requestedBy },
         paused: false,
       });
     } catch (error) {
@@ -371,9 +436,15 @@ export class MusicPlayer {
       console.error("Song konnte nicht gestartet werden:", error);
       throw new MusicError("LAVALINK_UNAVAILABLE", 503);
     }
+  }
 
-    await prisma.musicQueue.delete({ where: { id: next.id } });
-    return true;
+  private rememberPlayed(url: string) {
+    const canonicalUrl = toCanonicalUrl(url);
+    if (!canonicalUrl) return;
+    this.playedUrls = [
+      ...this.playedUrls.filter((playedUrl) => playedUrl !== canonicalUrl),
+      canonicalUrl,
+    ].slice(-PLAYED_HISTORY_SIZE);
   }
 
   private async abortJam() {
@@ -393,6 +464,7 @@ export class MusicPlayer {
     this.current = null;
     this.autoplay = false;
     this.lastFailure = null;
+    this.playedUrls = [];
     await prisma.musicQueue.deleteMany();
   }
 
