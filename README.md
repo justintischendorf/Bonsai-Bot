@@ -12,16 +12,15 @@ Discord-Bot mit Web-Dashboard für einen einzelnen Discord-Server. Mitglieder me
 
 ## Aufbau
 
-| Pfad                  | Inhalt                                         |
-| --------------------- | ---------------------------------------------- |
-| `apps/web`            | Web-Dashboard (Next.js, React)                 |
-| `apps/api`            | API (Elysia)                                   |
-| `apps/bot`            | Discord-Bot (discord.js, lavalink-client)      |
-| `packages/database`   | Prisma-Schema, Migrationen und Client (SQLite) |
-| `packages/auth`       | Better-Auth-Konfiguration                      |
-| `packages/api-client` | API-Client für das Web-Dashboard               |
-| `packages/treaty`     | Eden-Treaty-Anbindung an die API               |
-| `packages/logger`     | Gemeinsames Logging                            |
+| Pfad                | Inhalt                                         |
+| ------------------- | ---------------------------------------------- |
+| `apps/web`          | Web-Dashboard (Next.js, React)                 |
+| `apps/api`          | API (Elysia)                                   |
+| `apps/bot`          | Discord-Bot (discord.js, lavalink-client)      |
+| `packages/database` | Prisma-Schema, Migrationen und Client (SQLite) |
+| `packages/auth`     | Better-Auth-Konfiguration                      |
+| `packages/treaty`   | Eden-Treaty-Anbindung an die API               |
+| `packages/logger`   | Gemeinsames Logging                            |
 
 Für die Musikwiedergabe kommen zusätzlich Lavalink und yt-cipher als Docker-Container zum Einsatz.
 
@@ -44,7 +43,6 @@ Für die Musikwiedergabe kommen zusätzlich Lavalink und yt-cipher als Docker-Co
    - `apps/api`
    - `apps/bot`
    - `apps/web`
-   - `packages/api-client`
    - `packages/database`
 
 3. Prisma-Client erzeugen und Datenbank anlegen:

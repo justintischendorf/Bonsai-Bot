@@ -41,7 +41,6 @@
       "name": "bot",
       "version": "0.0.0",
       "dependencies": {
-        "@repo/api-client": "workspace:*",
         "@repo/database": "workspace:*",
         "discord.js": "^14.27.0",
         "lavalink-client": "^2.11.0",
@@ -60,7 +59,6 @@
         "@dnd-kit/sortable": "^10.0.0",
         "@dnd-kit/utilities": "^3.2.2",
         "@gsap/react": "^2.1.2",
-        "@repo/api-client": "workspace:*",
         "@repo/auth": "workspace:*",
         "@repo/database": "workspace:*",
         "@repo/treaty": "workspace:*",
@@ -85,18 +83,6 @@
         "eslint-config-next": "16.4.3",
         "tailwindcss": "^4",
         "typescript": "^5",
-      },
-    },
-    "packages/api-client": {
-      "name": "@repo/api-client",
-      "dependencies": {
-        "@repo/treaty": "workspace:*",
-      },
-      "devDependencies": {
-        "@types/bun": "latest",
-      },
-      "peerDependencies": {
-        "typescript": "^7",
       },
     },
     "packages/auth": {
@@ -565,8 +551,6 @@
     "@radix-ui/react-use-layout-effect": ["@radix-ui/react-use-layout-effect@1.1.1", "", { "peerDependencies": { "@types/react": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react"] }, "sha512-RbJRS4UWQFkzHTTwVymMTUv8EqYhOp8dOOviLj2ugtTiXRaRQS7GLGxZTLL1jWhMeoSCf5zmcZkqTl9IiYfXcQ=="],
 
     "@repo/api": ["@repo/api@workspace:apps/api"],
-
-    "@repo/api-client": ["@repo/api-client@workspace:packages/api-client"],
 
     "@repo/auth": ["@repo/auth@workspace:packages/auth"],
 
