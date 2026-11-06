@@ -3,8 +3,8 @@ import { Pause, Play, SkipForward } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { musicQueueQueryKey, useMusicQueue } from "@/hooks/use-music-queue";
+import { apiClient } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import { apiClient } from "@repo/api-client";
 
 import LoadingSpinner from "./loading-spinner";
 import { formatDuration } from "./music-queue";

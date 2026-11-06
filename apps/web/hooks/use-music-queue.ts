@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { apiClient } from "@repo/api-client";
+import { apiClient } from "@/lib/api-client";
 
 const MUSIC_POLL_INTERVAL_MS = 3_000;
 

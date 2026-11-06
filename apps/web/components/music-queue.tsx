@@ -27,8 +27,8 @@ import {
   musicQueueQueryKey,
   useMusicQueue,
 } from "@/hooks/use-music-queue";
+import { apiClient } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import { apiClient } from "@repo/api-client";
 
 import { MusicQueueDialog } from "./music-queue-dialog";
 import MusicQueueEmpty from "./music-queue-empty";

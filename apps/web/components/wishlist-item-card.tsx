@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { wishlistQueryKey, type WishlistItem } from "@/hooks/use-wishlist";
+import { apiClient } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import { apiClient } from "@repo/api-client";
 
 import { toast } from "./ui/toast";
 

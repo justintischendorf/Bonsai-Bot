@@ -4,21 +4,22 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
-import { ChevronDown, MoveRight } from "lucide-react";
+import { MoveRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 import bonsaiBotTitle from "@/assets/logos/bonsai-bot-title.svg";
 import { BonsaiLogo } from "@/components/bonsai-logo";
 import MemberCard, { MemberCardSkeleton } from "@/components/member-card";
 import NowPlaying from "@/components/now-playing";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import WishlistSuggestion from "@/components/wishlist-suggestion";
 import { useDiscordMemberInfo } from "@/hooks/use-discord-member-info";
 import { useFloatToTextBottom } from "@/hooks/use-float-to-text-bottom";
 import { useLimitVisibleItems } from "@/hooks/use-limit-visible-items";
+import { useMusicQueue } from "@/hooks/use-music-queue";
+import { useWishlistSuggestion } from "@/hooks/use-wishlist-suggestion";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 
@@ -32,9 +33,6 @@ export default function DashboardPage() {
     "intro-link opacity-0 group flex flex-1 items-center justify-start rounded-xl gap-4 px-4 py-2 transition-colors duration-300 hover:border-bonsai-leaf-light hover:text-bonsai-leaf-light";
   const { spacerRef, textRef } = useFloatToTextBottom();
 
-  const [showMembers, setShowMembers] = useState(false);
-  const previousShowMembers = useRef(showMembers);
-
   const {
     data: serverMembersResponse,
     isLoading: isDiscordServerMembersLoading,
@@ -47,6 +45,11 @@ export default function DashboardPage() {
     MAX_VISIBLE_MEMBERS,
     serverMembers?.length ?? 0,
   );
+
+  const { data: wishlistSuggestionResponse } = useWishlistSuggestion();
+  const { data: musicResponse } = useMusicQueue();
+  const hasSuggestion = !!wishlistSuggestionResponse?.data?.server;
+  const hasSong = !!musicResponse?.data?.server?.current;
 
   const pageRef = useRef<HTMLElement>(null);
 
@@ -65,10 +68,9 @@ export default function DashboardPage() {
       );
 
       if (introPlayed) {
-        gsap.set(
-          ".intro-card, .split, .bonsai-logo, .intro-link, .member-toggle",
-          { opacity: 1 },
-        );
+        gsap.set(".intro-card, .split, .bonsai-logo, .intro-link", {
+          opacity: 1,
+        });
         return;
       }
 
@@ -129,37 +131,38 @@ export default function DashboardPage() {
           },
           "<0.2",
         )
-        .to(
-          ".bonsai-logo, .intro-link, .member-toggle",
-          { opacity: 1, duration: 1 },
-          "-=0.4",
-        );
+        .to(".bonsai-logo, .intro-link", { opacity: 1, duration: 1 }, "-=0.4");
     },
     { scope: pageRef },
   );
 
   useGSAP(
     () => {
-      const toggled = previousShowMembers.current !== showMembers;
-      previousShowMembers.current = showMembers;
+      gsap.to(".status-card", { opacity: 1, stagger: 0.1 });
+    },
+    { scope: pageRef, dependencies: [hasSuggestion, hasSong] },
+  );
 
-      if (isDiscordServerMembersLoading || (cardsIntroPlayed && !toggled))
-        return;
+  useGSAP(
+    () => {
+      if (isDiscordServerMembersLoading || cardsIntroPlayed) return;
       cardsIntroPlayed = true;
       gsap.fromTo(".stagger", { opacity: 0 }, { opacity: 1, stagger: 0.1 });
     },
     {
       scope: pageRef,
-      dependencies: [isDiscordServerMembersLoading, showMembers],
+      dependencies: [isDiscordServerMembersLoading],
     },
   );
 
   return (
     <main ref={pageRef}>
-      <div className="flex-col sm:flex-row flex gap-5 pb-5 px-4 sm:px-8 xl:px-20">
-        <WishlistSuggestion className="intro-card opacity-0" />
-        <NowPlaying className="intro-card opacity-0" />
-      </div>
+      {(hasSuggestion || hasSong) && (
+        <div className="flex-col sm:flex-row flex gap-5 pb-5 px-4 sm:px-8 xl:px-20">
+          <WishlistSuggestion className="status-card opacity-0" />
+          <NowPlaying className="status-card opacity-0" />
+        </div>
+      )}
       <div className="flex flex-col gap-10 items-start justify-center lg:flex-row lg:gap-0">
         <div className="w-full flex flex-col px-4 sm:px-8 lg:w-1/2 xl:px-20">
           <Image
@@ -206,37 +209,19 @@ export default function DashboardPage() {
           </nav>
         </div>
         <div className="w-full flex justify-center flex-wrap px-4 gap-2 sm:px-8 lg:w-1/2 lg:justify-end xl:px-20">
-          <div
-            className={`w-full flex justify-end items-center lg:mb-4 ${showMembers ? "mb-4" : ""}`}
-          >
-            <Button
-              className="member-toggle opacity-0 w-full lg:hidden"
-              variant="outline"
-              type="button"
-              aria-expanded={showMembers}
-              onClick={() => setShowMembers(!showMembers)}
-            >
-              {showMembers
-                ? "Mitgliederliste ausblenden"
-                : "Mitgliederliste anzeigen"}
-              <ChevronDown
-                className={`transition-transform duration-300 ${showMembers ? "rotate-180" : ""}`}
-              />
-            </Button>
-            <div className="hidden lg:block">
-              {isDiscordServerMembersLoading ? (
-                <Skeleton className="w-42 h-8" />
-              ) : (
-                <p className="text-lg font-semibold">
-                  {serverMembers?.length} Mitglieder
-                </p>
-              )}
-            </div>
+          <div className="w-full flex justify-center items-center mb-4 lg:justify-end">
+            {isDiscordServerMembersLoading ? (
+              <Skeleton className="w-42 h-8" />
+            ) : (
+              <p className="text-lg font-semibold">
+                {serverMembers?.length} Mitglieder
+              </p>
+            )}
           </div>
 
           <div
             ref={memberListRef}
-            className={`w-full flex-wrap justify-center gap-2 overflow-y-auto lg:justify-end ${showMembers ? "flex" : "hidden lg:flex"}`}
+            className="w-full flex flex-wrap justify-center gap-2 overflow-y-auto lg:justify-end"
           >
             {isDiscordServerMembersLoading
               ? Array.from({ length: 10 }, (_, index) => (
