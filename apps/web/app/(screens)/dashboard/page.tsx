@@ -154,6 +154,7 @@ export default function DashboardPage() {
 
   useGSAP(
     () => {
+      if (!hasSuggestion && !hasSong) return;
       gsap.to(".status-card", { opacity: 1, stagger: 0.1 });
     },
     { scope: pageRef, dependencies: [hasSuggestion, hasSong] },
