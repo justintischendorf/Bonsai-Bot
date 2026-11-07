@@ -210,8 +210,9 @@ export default function DashboardPage() {
               <strong>heutige Empfehlung</strong> vor. So geht keine gute Idee
               mehr im Chat unter, und die Frage „Was zocken wir heute?“ ist
               schnell beantwortet. Steht der nächste Spielekauf an, vergleicht
-              er die Preise auf <strong>Steam</strong> und{" "}
-              <strong>Instant Gaming</strong> und findet das{" "}
+              er die Preise auf <strong>Steam</strong>,{" "}
+              <strong>Instant Gaming</strong> und im{" "}
+              <strong>PlayStation Store</strong> und findet das{" "}
               <strong>günstigste Angebot</strong>. Wird ein Spiel deutlich
               günstiger, <strong>meldet er sich im Discord</strong>, damit am
               Ende mehr fürs nächste Spiel übrig bleibt. Und wenn ihr zusammen

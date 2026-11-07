@@ -154,6 +154,19 @@ export const errorPlugin = new Elysia({ name: "error" }).onError(
       };
     }
 
+    if (
+      error instanceof Error &&
+      error.message === "PLAYSTATION_SCRAPING_FAILED"
+    ) {
+      set.status = 400;
+      logger.warn("PlayStation Store-Scraping fehlgeschlagen");
+      return {
+        success: false,
+        message: "PlayStation Store-Scraping fehlgeschlagen",
+        error: "PLAYSTATION_SCRAPING_FAILED",
+      };
+    }
+
     if (error instanceof Error && error.message === "FAILED_TO_FETCH_PAGE") {
       set.status = 400;
       logger.warn("Seite konnte nicht abgerufen werden");

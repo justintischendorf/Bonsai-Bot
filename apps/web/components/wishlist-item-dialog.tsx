@@ -28,6 +28,7 @@ export function WishlistItemDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [steamLink, setSteamLink] = useState("");
   const [instantGamingLink, setInstantGamingLink] = useState("");
+  const [playstationLink, setPlaystationLink] = useState("");
   const [noLinkProvidedError, setNoLinkProvidedError] = useState(false);
 
   const { mutateAsync: addWishlistItem, isPending: isAddingWishlistItem } =
@@ -35,13 +36,18 @@ export function WishlistItemDialog() {
       mutationFn: async (input: {
         steamLink: string;
         instantGamingLink: string;
+        playstationLink: string;
       }) => {
         return apiClient.api.wishlist.post(input);
       },
     });
 
-  async function handleSubmit(steamLink: string, instantGamingLink: string) {
-    if (steamLink === "" && instantGamingLink === "") {
+  async function handleSubmit() {
+    if (
+      steamLink === "" &&
+      instantGamingLink === "" &&
+      playstationLink === ""
+    ) {
       setNoLinkProvidedError(true);
       return;
     } else {
@@ -51,6 +57,7 @@ export function WishlistItemDialog() {
     const { error: addWishlistItemError } = await addWishlistItem({
       steamLink,
       instantGamingLink,
+      playstationLink,
     });
 
     setIsOpen(false);
@@ -67,6 +74,7 @@ export function WishlistItemDialog() {
     queryClient.invalidateQueries({ queryKey: wishlistQueryKey });
     setSteamLink("");
     setInstantGamingLink("");
+    setPlaystationLink("");
 
     toast.add({
       title: "Spiel erfolgreich hinzugefügt",
@@ -93,7 +101,7 @@ export function WishlistItemDialog() {
           className="grid gap-4"
           onSubmit={(e) => {
             e.preventDefault();
-            handleSubmit(steamLink, instantGamingLink);
+            handleSubmit();
           }}
         >
           <DialogHeader>
@@ -107,14 +115,23 @@ export function WishlistItemDialog() {
                 >
                   <span className="text-bonsai-leaf-light">Steam Store</span>
                 </Link>
-              }{" "}
-              und den Link zum{" "}
+              }
+              , zum{" "}
               <Link
                 className="text-bonsai-leaf-light"
                 href="https://www.instant-gaming.com/"
               >
                 <span className="text-bonsai-leaf-light">
                   Instant Gaming Store
+                </span>
+              </Link>{" "}
+              und zum{" "}
+              <Link
+                className="text-bonsai-leaf-light"
+                href="https://store.playstation.com/de-de/pages/latest"
+              >
+                <span className="text-bonsai-leaf-light">
+                  PlayStation Store
                 </span>
               </Link>{" "}
               an, damit Bonsai die Preise vergleichen kann und das günstigste
@@ -142,6 +159,17 @@ export function WishlistItemDialog() {
                 value={instantGamingLink}
                 onChange={(e) => setInstantGamingLink(e.target.value)}
                 placeholder="https://www.instant-gaming.com/de/1234-buy-example-game-steam-key-global/"
+              />
+            </Field>
+            <Field>
+              <Label htmlFor="playstation-link">PlayStation Store Link</Label>
+              <Input
+                aria-invalid={noLinkProvidedError}
+                id="playstation-link"
+                name="playstation-link"
+                value={playstationLink}
+                onChange={(e) => setPlaystationLink(e.target.value)}
+                placeholder="https://store.playstation.com/de-de/concept/12345678"
               />
             </Field>
           </FieldGroup>

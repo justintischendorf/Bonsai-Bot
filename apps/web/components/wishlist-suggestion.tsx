@@ -5,6 +5,7 @@ import { useWishlistSuggestion } from "@/hooks/use-wishlist-suggestion";
 import { cn } from "@/lib/utils";
 
 import GameCover from "./game-cover";
+import { InstantGamingLogo, PlayStationLogo, SteamLogo } from "./shop-logos";
 
 export default function WishlistSuggestion({
   href,
@@ -21,13 +22,21 @@ export default function WishlistSuggestion({
   const shops = [
     {
       name: "Steam",
+      Logo: SteamLogo,
       link: wishlistSuggestion.steamLink,
       price: wishlistSuggestion.steamPrice,
     },
     {
       name: "Instant Gaming",
+      Logo: InstantGamingLogo,
       link: wishlistSuggestion.instantGamingLink,
       price: wishlistSuggestion.instantGamingPrice,
+    },
+    {
+      name: "PlayStation Store",
+      Logo: PlayStationLogo,
+      link: wishlistSuggestion.playstationLink,
+      price: wishlistSuggestion.playstationPrice,
     },
   ];
 
@@ -50,6 +59,7 @@ export default function WishlistSuggestion({
         imageUrl={wishlistSuggestion.imageUrl}
         label={`Titelbild von ${wishlistSuggestion.name}`}
         sizes="92px"
+        loading="eager"
         className="h-13 rounded-md"
         iconClassName="size-5"
       />
@@ -59,7 +69,7 @@ export default function WishlistSuggestion({
           {wishlistSuggestion.name}
         </h2>
         {shops.map(
-          ({ name, link, price }) =>
+          ({ name, Logo, link, price }) =>
             link && (
               <div
                 key={name}
@@ -69,6 +79,7 @@ export default function WishlistSuggestion({
                   href={link}
                   className="group relative z-10 -my-0.5 flex w-fit items-center gap-1 py-0.5 text-xs font-medium text-muted-foreground transition-colors duration-300 hover:text-bonsai-leaf-light"
                 >
+                  <Logo className="size-3 shrink-0" />
                   {name}
                   <MoveRight className="size-3.5 transition-transform duration-300 group-hover:translate-x-1" />
                 </Link>

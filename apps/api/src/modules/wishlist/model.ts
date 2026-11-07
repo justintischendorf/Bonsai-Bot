@@ -4,6 +4,7 @@ export namespace WishlistModel {
   export const AddGameToWishlist = t.Object({
     steamLink: t.Optional(t.String()),
     instantGamingLink: t.Optional(t.String()),
+    playstationLink: t.Optional(t.String()),
   });
 
   export const ScrapedShop = t.Object({

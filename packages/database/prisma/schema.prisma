@@ -79,10 +79,13 @@ model Wishlist {
   description        String
   steamPrice         Float?
   instantGamingPrice Float?
+  playstationPrice   Float?
   steamLink          String?
   instantGamingLink  String?
+  playstationLink    String?
   steamLinkBroken    Boolean  @default(false)
   instantGamingLinkBroken Boolean @default(false)
+  playstationLinkBroken   Boolean @default(false)
   releaseDate        String?
   imageUrl           String?
   createdBy          String

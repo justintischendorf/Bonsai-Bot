@@ -63,7 +63,7 @@ export abstract class WishlistService {
   }) {
     logger.info("Adding wishlist item to database", { body });
 
-    if (!body.steamLink && !body.instantGamingLink) {
+    if (!body.steamLink && !body.instantGamingLink && !body.playstationLink) {
       throw new Error("NO_LINK_PROVIDED");
     }
 
@@ -73,6 +73,9 @@ export abstract class WishlistService {
           ...(body.steamLink ? [{ steamLink: body.steamLink }] : []),
           ...(body.instantGamingLink
             ? [{ instantGamingLink: body.instantGamingLink }]
+            : []),
+          ...(body.playstationLink
+            ? [{ playstationLink: body.playstationLink }]
             : []),
         ],
       },
@@ -86,6 +89,9 @@ export abstract class WishlistService {
     const instantGaming = body.instantGamingLink
       ? await scrapeInstantGaming(body.instantGamingLink)
       : null;
+    const playstation = body.playstationLink
+      ? await scrapePlayStation(body.playstationLink)
+      : null;
 
     if (steam && (!steam.name || Number.isNaN(steam.price))) {
       throw new Error("STEAM_SCRAPING_FAILED");
@@ -98,11 +104,26 @@ export abstract class WishlistService {
       throw new Error("INSTANT_GAMING_SCRAPING_FAILED");
     }
 
-    const name = steam?.name || instantGaming?.name || "";
-    const description = steam?.description || instantGaming?.description || "";
+    if (playstation && (!playstation.name || Number.isNaN(playstation.price))) {
+      throw new Error("PLAYSTATION_SCRAPING_FAILED");
+    }
+
+    const name = steam?.name || instantGaming?.name || playstation?.name || "";
+    const description =
+      steam?.description ||
+      instantGaming?.description ||
+      playstation?.description ||
+      "";
     const releaseDate =
-      steam?.releaseDate || instantGaming?.releaseDate || null;
-    const imageUrl = steam?.imageUrl || instantGaming?.imageUrl || null;
+      steam?.releaseDate ||
+      instantGaming?.releaseDate ||
+      playstation?.releaseDate ||
+      null;
+    const imageUrl =
+      steam?.imageUrl ||
+      instantGaming?.imageUrl ||
+      playstation?.imageUrl ||
+      null;
 
     await prisma.wishlist.create({
       data: {
@@ -110,8 +131,10 @@ export abstract class WishlistService {
         description,
         steamPrice: steam?.price ?? null,
         instantGamingPrice: instantGaming?.price ?? null,
+        playstationPrice: playstation?.price ?? null,
         steamLink: body.steamLink || null,
         instantGamingLink: body.instantGamingLink || null,
+        playstationLink: body.playstationLink || null,
         releaseDate,
         imageUrl,
         createdBy: userName,
@@ -138,24 +161,42 @@ export abstract class WishlistService {
       const instantGaming = game.instantGamingLink
         ? await scrapeShop(scrapeInstantGaming, game.instantGamingLink)
         : null;
+      const playstation = game.playstationLink
+        ? await scrapeShop(scrapePlayStation, game.playstationLink)
+        : null;
       const steamLinkBroken = Boolean(game.steamLink) && !steam;
       const instantGamingLinkBroken =
         Boolean(game.instantGamingLink) && !instantGaming;
+      const playstationLinkBroken =
+        Boolean(game.playstationLink) && !playstation;
+      const anyLinkBroken =
+        steamLinkBroken || instantGamingLinkBroken || playstationLinkBroken;
 
-      const name = steam?.name || instantGaming?.name || game.name;
+      const name =
+        steam?.name || instantGaming?.name || playstation?.name || game.name;
       const description =
-        steam?.description || instantGaming?.description || game.description;
+        steam?.description ||
+        instantGaming?.description ||
+        playstation?.description ||
+        game.description;
       const releaseDate =
         steam?.releaseDate ||
         instantGaming?.releaseDate ||
-        (steamLinkBroken || instantGamingLinkBroken ? game.releaseDate : null);
+        playstation?.releaseDate ||
+        (anyLinkBroken ? game.releaseDate : null);
       const imageUrl =
-        steam?.imageUrl || instantGaming?.imageUrl || game.imageUrl;
+        steam?.imageUrl ||
+        instantGaming?.imageUrl ||
+        playstation?.imageUrl ||
+        game.imageUrl;
       // Without a fresh value the last known price stays, the card shows the hint next to it.
       const steamPrice = steam ? steam.price : game.steamPrice;
       const instantGamingPrice = instantGaming
         ? instantGaming.price
         : game.instantGamingPrice;
+      const playstationPrice = playstation
+        ? playstation.price
+        : game.playstationPrice;
 
       await prisma.wishlist.update({
         where: { id: game.id },
@@ -164,8 +205,10 @@ export abstract class WishlistService {
           description,
           steamPrice,
           instantGamingPrice,
+          playstationPrice,
           steamLinkBroken,
           instantGamingLinkBroken,
+          playstationLinkBroken,
           releaseDate,
           imageUrl,
         },
@@ -177,6 +220,11 @@ export abstract class WishlistService {
           "Instant Gaming",
           game.instantGamingPrice,
           instantGamingPrice,
+        ),
+        describePriceDrop(
+          "PlayStation Store",
+          game.playstationPrice,
+          playstationPrice,
         ),
       ].filter((drop) => drop !== null);
 
@@ -244,6 +292,10 @@ function formatPrices(item: WishlistItem) {
       item.instantGamingPrice === null
         ? null
         : priceFormatter.format(item.instantGamingPrice),
+    playstationPrice:
+      item.playstationPrice === null
+        ? null
+        : priceFormatter.format(item.playstationPrice),
   };
 }
 
@@ -295,7 +347,7 @@ async function loadPage(url: string) {
   return cheerio.load(await response.text());
 }
 
-// Read the cover image, both shops provide it as a 616x353 og:image
+// Read the cover image, Steam and Instant Gaming provide it as a 616x353 og:image
 function getImageUrl($: cheerio.CheerioAPI) {
   return $('meta[property="og:image"]').attr("content")?.trim() || null;
 }
@@ -359,4 +411,76 @@ async function scrapeInstantGaming(
       : null,
     imageUrl: getImageUrl($),
   };
+}
+
+// Scrape PlayStation Store Page (concept or product page)
+async function scrapePlayStation(
+  url: string,
+): Promise<WishlistModel["ScrapedShop"]> {
+  const $ = await loadPage(url);
+  const product = parsePlayStationProduct(
+    $('script[type="application/ld+json"]').first().text(),
+  );
+
+  // Shown as e.g. "5.9.2024", announced games without a date have none
+  const releaseText = $(
+    '[data-qa="gameInfo#releaseInformation#releaseDate-value"]',
+  )
+    .first()
+    .text()
+    .trim();
+  const releaseDay = parseGermanDate(releaseText);
+  const price =
+    typeof product.offers?.price === "number" ? product.offers.price : null;
+  // The date decides when there is one, as pre-orders already have a price.
+  // Without a date only announced games have no price.
+  const unreleased =
+    releaseDay !== null ? releaseDay > getCurrentDay() : price === null;
+
+  return {
+    name: product.name?.trim() ?? "",
+    description: product.description?.replace(/\r/g, "").trim() ?? "",
+    price: unreleased ? null : price,
+    releaseDate: unreleased ? releaseText || "unbekannt" : null,
+    imageUrl: getPlayStationImageUrl($) ?? product.image ?? null,
+  };
+}
+
+function parsePlayStationProduct(json: string): {
+  name?: string;
+  description?: string;
+  image?: string;
+  offers?: { price?: number };
+} {
+  try {
+    return JSON.parse(json);
+  } catch {
+    return {};
+  }
+}
+
+// The hero image is landscape like the other shops' covers, the page only embeds a tiny preview of it
+function getPlayStationImageUrl($: cheerio.CheerioAPI) {
+  const preview = $('img[data-qa="gameBackgroundImage#heroImage#preview"]')
+    .first()
+    .attr("src");
+  if (!preview) return null;
+
+  const url = new URL(preview);
+  url.search = "?w=1280";
+  return url.href;
+}
+
+// Turn "5.9.2024" into a day number comparable with getCurrentDay
+function parseGermanDate(text: string) {
+  const match = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (!match) return null;
+
+  const [, day, month, year] = match.map(Number) as [
+    number,
+    number,
+    number,
+    number,
+  ];
+  return Date.UTC(year, month - 1, day) / 86_400_000;
 }

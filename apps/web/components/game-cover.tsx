@@ -8,12 +8,14 @@ export default function GameCover({
   imageUrl,
   label,
   sizes,
+  loading,
   className,
   iconClassName,
 }: {
   imageUrl?: string | null;
   label: string;
   sizes: string;
+  loading?: "eager" | "lazy";
   className?: string;
   iconClassName?: string;
 }) {
@@ -35,6 +37,7 @@ export default function GameCover({
           alt=""
           fill
           sizes={sizes}
+          loading={loading}
           className="object-cover"
           onError={() => setFailedUrl(imageUrl)}
         />
