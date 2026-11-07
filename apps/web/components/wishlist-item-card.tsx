@@ -1,5 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MoveRight, Trash2, TriangleAlert } from "lucide-react";
+import {
+  BadgeX,
+  CircleCheckBig,
+  MoveRight,
+  Trash2,
+  TriangleAlert,
+} from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -109,6 +115,14 @@ export default function WishlistItemCard({
           <p className="truncate text-sm text-muted-foreground">
             Hinzugefügt von {item.createdBy}
           </p>
+          <div className="flex gap-2 items-center">
+            <p className="text-sm">Crossplay</p>
+            {item.crossplayAvailable ? (
+              <CircleCheckBig className="size-5 text-bonsai-leaf-light" />
+            ) : (
+              <BadgeX className="size-5 text-destructive" />
+            )}
+          </div>
         </div>
         <Button
           className="text-muted-foreground transition-colors duration-300 hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
