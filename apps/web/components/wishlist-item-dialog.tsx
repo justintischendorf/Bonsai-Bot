@@ -21,6 +21,7 @@ import { wishlistQueryKey } from "@/hooks/use-wishlist";
 import { apiClient } from "@/lib/api-client";
 
 import LoadingSpinner from "./loading-spinner";
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { toast } from "./ui/toast";
 
 export function WishlistItemDialog() {
@@ -29,6 +30,7 @@ export function WishlistItemDialog() {
   const [steamLink, setSteamLink] = useState("");
   const [instantGamingLink, setInstantGamingLink] = useState("");
   const [playstationLink, setPlaystationLink] = useState("");
+  const [crossplayAvailable, setCrossplayAvailable] = useState(false);
   const [noLinkProvidedError, setNoLinkProvidedError] = useState(false);
 
   const { mutateAsync: addWishlistItem, isPending: isAddingWishlistItem } =
@@ -37,6 +39,7 @@ export function WishlistItemDialog() {
         steamLink: string;
         instantGamingLink: string;
         playstationLink: string;
+        crossplayAvailable: boolean;
       }) => {
         return apiClient.api.wishlist.post(input);
       },
@@ -58,6 +61,7 @@ export function WishlistItemDialog() {
       steamLink,
       instantGamingLink,
       playstationLink,
+      crossplayAvailable,
     });
 
     setIsOpen(false);
@@ -75,6 +79,7 @@ export function WishlistItemDialog() {
     setSteamLink("");
     setInstantGamingLink("");
     setPlaystationLink("");
+    setCrossplayAvailable(false);
 
     toast.add({
       title: "Spiel erfolgreich hinzugefügt",
@@ -171,6 +176,30 @@ export function WishlistItemDialog() {
                 onChange={(e) => setPlaystationLink(e.target.value)}
                 placeholder="https://store.playstation.com/de-de/concept/12345678"
               />
+            </Field>
+            <Field>
+              <Label id="crossplay-label">
+                Ist Crossplay verfügbar?
+                <span className="text-sm text-muted-foreground">
+                  (Playstation 5 - PC)
+                </span>
+              </Label>
+              <RadioGroup
+                aria-labelledby="crossplay-label"
+                value={crossplayAvailable ? "yes" : "no"}
+                onValueChange={(value) =>
+                  setCrossplayAvailable(value === "yes")
+                }
+              >
+                <div className="flex items-center gap-3">
+                  <RadioGroupItem value="yes" id="crossplay-available" />
+                  <Label htmlFor="crossplay-available">ja</Label>
+                </div>
+                <div className="flex items-center gap-3">
+                  <RadioGroupItem value="no" id="crossplay-not-available" />
+                  <Label htmlFor="crossplay-not-available">nein</Label>
+                </div>
+              </RadioGroup>
             </Field>
           </FieldGroup>
           <DialogFooter>

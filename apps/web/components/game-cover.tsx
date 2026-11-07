@@ -19,7 +19,6 @@ export default function GameCover({
   className?: string;
   iconClassName?: string;
 }) {
-  // Merkt sich die URL statt eines Flags, damit ein neues Bild wieder angezeigt wird.
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
   return (

@@ -135,6 +135,7 @@ export abstract class WishlistService {
         steamLink: body.steamLink || null,
         instantGamingLink: body.instantGamingLink || null,
         playstationLink: body.playstationLink || null,
+        crossplayAvailable: body.crossplayAvailable,
         releaseDate,
         imageUrl,
         createdBy: userName,
