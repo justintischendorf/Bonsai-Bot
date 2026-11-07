@@ -38,10 +38,14 @@ export abstract class WishlistService {
   static async getWishlistSuggestion() {
     logger.info("Fetching wishlist suggestion from database");
 
-    const count = await prisma.wishlist.count();
+    // Only released games are suggested, unreleased ones have a release date set
+    const where = { releaseDate: null };
+
+    const count = await prisma.wishlist.count({ where });
     if (count === 0) return null;
 
     const suggestion = await prisma.wishlist.findFirst({
+      where,
       orderBy: { id: "asc" },
       skip: getDailyIndex(count, getCurrentDay()),
     });
@@ -98,6 +102,7 @@ export abstract class WishlistService {
     const description = steam?.description || instantGaming?.description || "";
     const releaseDate =
       steam?.releaseDate || instantGaming?.releaseDate || null;
+    const imageUrl = steam?.imageUrl || instantGaming?.imageUrl || null;
 
     await prisma.wishlist.create({
       data: {
@@ -108,6 +113,7 @@ export abstract class WishlistService {
         steamLink: body.steamLink || null,
         instantGamingLink: body.instantGamingLink || null,
         releaseDate,
+        imageUrl,
         createdBy: userName,
       },
     });
@@ -143,6 +149,8 @@ export abstract class WishlistService {
         steam?.releaseDate ||
         instantGaming?.releaseDate ||
         (steamLinkBroken || instantGamingLinkBroken ? game.releaseDate : null);
+      const imageUrl =
+        steam?.imageUrl || instantGaming?.imageUrl || game.imageUrl;
       // Without a fresh value the last known price stays, the card shows the hint next to it.
       const steamPrice = steam ? steam.price : game.steamPrice;
       const instantGamingPrice = instantGaming
@@ -159,6 +167,7 @@ export abstract class WishlistService {
           steamLinkBroken,
           instantGamingLinkBroken,
           releaseDate,
+          imageUrl,
         },
       });
 
@@ -286,6 +295,11 @@ async function loadPage(url: string) {
   return cheerio.load(await response.text());
 }
 
+// Read the cover image, both shops provide it as a 616x353 og:image
+function getImageUrl($: cheerio.CheerioAPI) {
+  return $('meta[property="og:image"]').attr("content")?.trim() || null;
+}
+
 // Parse the price from the text
 function parsePrice(text: string) {
   return parseFloat(
@@ -297,9 +311,15 @@ function parsePrice(text: string) {
 async function scrapeSteam(url: string): Promise<WishlistModel["ScrapedShop"]> {
   const $ = await loadPage(url);
 
+  // Skip boxes without a price, e.g. the free Friend's Pass that comes before the actual game
   const purchaseBox = $(
     ".game_area_purchase_game_wrapper:not(.dynamic_bundle_description) .game_area_purchase_game:not(.demo_above_purchase)",
-  ).first();
+  )
+    .filter(
+      (_, box) =>
+        $(box).find(".discount_final_price, .game_purchase_price").length > 0,
+    )
+    .first();
   const price =
     purchaseBox.find(".discount_final_price").first().text() ||
     purchaseBox.find(".game_purchase_price").first().text();
@@ -312,6 +332,7 @@ async function scrapeSteam(url: string): Promise<WishlistModel["ScrapedShop"]> {
     releaseDate: comingSoon
       ? $(".release_date .date").first().text().trim() || "unbekannt"
       : null,
+    imageUrl: getImageUrl($),
   };
 }
 
@@ -336,5 +357,6 @@ async function scrapeInstantGaming(
     releaseDate: release
       ? release.replace(/^Release:\s*/, "") || "unbekannt"
       : null,
+    imageUrl: getImageUrl($),
   };
 }

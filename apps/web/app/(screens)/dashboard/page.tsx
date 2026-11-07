@@ -176,8 +176,11 @@ export default function DashboardPage() {
     <main ref={pageRef}>
       {(hasSuggestion || hasSong) && (
         <div className="flex-col sm:flex-row flex gap-5 pb-5 px-4 sm:px-8 xl:px-20">
-          <WishlistSuggestion className="status-card opacity-0" />
-          <NowPlaying className="status-card opacity-0" />
+          <WishlistSuggestion
+            href="/wishlist"
+            className="status-card opacity-0"
+          />
+          <NowPlaying href="/bonsai-fm" className="status-card opacity-0" />
         </div>
       )}
       <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-x-0 lg:gap-y-16">
