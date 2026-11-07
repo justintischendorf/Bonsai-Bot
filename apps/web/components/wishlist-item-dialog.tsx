@@ -99,21 +99,23 @@ export function WishlistItemDialog() {
           <DialogHeader>
             <DialogTitle>Spiel auf die Wunschliste setzen</DialogTitle>
             <DialogDescription>
-              Am besten gibst du den Link zu{" "}
+              Am besten gibst du den Link zum{" "}
               {
                 <Link
                   className="text-bonsai-leaf-light"
                   href="https://store.steampowered.com/"
                 >
-                  Steam
+                  <span className="text-bonsai-leaf-light">Steam Store</span>
                 </Link>
               }{" "}
-              und den Link zu{" "}
+              und den Link zum{" "}
               <Link
                 className="text-bonsai-leaf-light"
                 href="https://www.instant-gaming.com/"
               >
-                Instant Gaming
+                <span className="text-bonsai-leaf-light">
+                  Instant Gaming Store
+                </span>
               </Link>{" "}
               an, damit Bonsai die Preise vergleichen kann und das günstigste
               Angebot findet.

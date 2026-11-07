@@ -84,6 +84,7 @@ model Wishlist {
   steamLinkBroken    Boolean  @default(false)
   instantGamingLinkBroken Boolean @default(false)
   releaseDate        String?
+  imageUrl           String?
   createdBy          String
   createdAt          DateTime @default(now())
 

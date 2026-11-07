@@ -16,6 +16,7 @@ import { wishlistQueryKey, type WishlistItem } from "@/hooks/use-wishlist";
 import { apiClient } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
+import GameCover from "./game-cover";
 import { toast } from "./ui/toast";
 
 const DESCRIPTION_PREVIEW_LENGTH = 120;
@@ -77,6 +78,13 @@ export default function WishlistItemCard({
         className,
       )}
     >
+      <GameCover
+        imageUrl={item.imageUrl}
+        label={`Titelbild von ${item.name}`}
+        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+        className="w-full rounded-md"
+        iconClassName="size-8"
+      />
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h2 className="truncate text-lg font-semibold">{item.name}</h2>
@@ -174,6 +182,7 @@ export default function WishlistItemCard({
 export function WishlistItemCardSkeleton() {
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-accent p-3">
+      <Skeleton className="aspect-616/353 w-full rounded-md" />
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <Skeleton className="h-7 w-2/3" />

@@ -1,9 +1,17 @@
+import Link from "next/link";
+
 import { useMusicQueue } from "@/hooks/use-music-queue";
 import { cn } from "@/lib/utils";
 
 import SongCover from "./song-cover";
 
-export default function NowPlaying({ className }: { className?: string }) {
+export default function NowPlaying({
+  href,
+  className,
+}: {
+  href?: string;
+  className?: string;
+}) {
   const { data: musicResponse } = useMusicQueue();
   const playback = musicResponse?.data?.server;
   const song = playback?.current;
@@ -13,10 +21,19 @@ export default function NowPlaying({ className }: { className?: string }) {
   return (
     <article
       className={cn(
-        "flex w-full items-center gap-3 rounded-xl border p-3 sm:w-1/2 lg:w-1/4",
+        "relative flex w-full items-center gap-3 rounded-xl border p-3 sm:w-1/2 lg:w-1/4",
+        href &&
+          "transition-colors duration-300 hover:border-bonsai-leaf-light",
         className,
       )}
     >
+      {href && (
+        <Link
+          href={href}
+          aria-label="Zu Bonsai FM"
+          className="absolute inset-0 rounded-xl"
+        />
+      )}
       <SongCover
         artworkUrl={song.artworkUrl}
         label={`Cover von ${song.title}`}
