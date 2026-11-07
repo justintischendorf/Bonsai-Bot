@@ -5,6 +5,7 @@ export namespace WishlistModel {
     steamLink: t.Optional(t.String()),
     instantGamingLink: t.Optional(t.String()),
     playstationLink: t.Optional(t.String()),
+    crossplayAvailable: t.Boolean(),
   });
 
   export const ScrapedShop = t.Object({

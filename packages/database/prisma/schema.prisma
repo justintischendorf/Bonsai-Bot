@@ -74,37 +74,38 @@ model Verification {
 }
 
 model Wishlist {
-  id                 Int      @id @default(autoincrement())
-  name               String
-  description        String
-  steamPrice         Float?
-  instantGamingPrice Float?
-  playstationPrice   Float?
-  steamLink          String?
-  instantGamingLink  String?
-  playstationLink    String?
-  steamLinkBroken    Boolean  @default(false)
-  instantGamingLinkBroken Boolean @default(false)
-  playstationLinkBroken   Boolean @default(false)
-  releaseDate        String?
-  imageUrl           String?
-  createdBy          String
-  createdAt          DateTime @default(now())
+  id                      Int      @id @default(autoincrement())
+  name                    String
+  description             String
+  steamPrice              Float?
+  instantGamingPrice      Float?
+  playstationPrice        Float?
+  steamLink               String?
+  instantGamingLink       String?
+  playstationLink         String?
+  steamLinkBroken         Boolean  @default(false)
+  instantGamingLinkBroken Boolean  @default(false)
+  playstationLinkBroken   Boolean  @default(false)
+  crossplayAvailable      Boolean  @default(false)
+  releaseDate             String?
+  imageUrl                String?
+  createdBy               String
+  createdAt               DateTime @default(now())
 
   @@map("wishlist")
 }
 
 model MusicQueue {
-  id        Int      @id @default(autoincrement())
-  title     String
-  artist    String
-  url       String
-  duration  Int
-  artworkUrl String?
-  position  Int      @default(0)
+  id           Int      @id @default(autoincrement())
+  title        String
+  artist       String
+  url          String
+  duration     Int
+  artworkUrl   String?
+  position     Int      @default(0)
   encodedTrack String
-  requestedBy String
-  createdAt DateTime @default(now())
+  requestedBy  String
+  createdAt    DateTime @default(now())
 
   @@map("music_queue")
 }
