@@ -17,6 +17,8 @@ import { useWishlist } from "@/hooks/use-wishlist";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 
+const FIRST_ROW_SIZE = 4;
+
 let introPlayed = false;
 let cardsIntroPlayed = false;
 
@@ -115,8 +117,9 @@ export default function Wishlist() {
         <p className="split opacity-0 max-w-3xl text-lg leading-relaxed text-pretty text-bonsai-pot [&_strong]:font-bold [&_strong]:text-bonsai-leaf-light">
           Hier findest du alle <strong>Spiele</strong>, die auf deiner
           Wunschliste stehen. Füge neue hinzu, indem du den Link von{" "}
-          <strong>Steam</strong> oder <strong>Instant Gaming</strong> angibst,
-          oder entferne Spiele, die du nicht mehr brauchst.
+          <strong>Steam</strong>, <strong>Instant Gaming</strong> oder dem{" "}
+          <strong>PlayStation Store</strong> angibst, oder entferne Spiele, die
+          du nicht mehr brauchst.
         </p>
         <WishlistItemDialog />
       </div>
@@ -126,8 +129,14 @@ export default function Wishlist() {
           ? Array.from({ length: 8 }, (_, index) => (
               <WishlistItemCardSkeleton key={index} />
             ))
-          : wishlistItems?.map((item) => (
-              <WishlistItemCard className="stagger" key={item.id} item={item} />
+          : wishlistItems?.map((item, index) => (
+              <WishlistItemCard
+                className="stagger"
+                key={item.id}
+                item={item}
+                // The first row (up to 4 columns) is visible right away
+                imageLoading={index < FIRST_ROW_SIZE ? "eager" : "lazy"}
+              />
             ))}
       </div>
       {wishlistItems?.length === 0 && !isWishlistLoading && (

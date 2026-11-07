@@ -176,8 +176,11 @@ export default function DashboardPage() {
     <main ref={pageRef}>
       {(hasSuggestion || hasSong) && (
         <div className="flex-col sm:flex-row flex gap-5 pb-5 px-4 sm:px-8 xl:px-20">
-          <WishlistSuggestion className="status-card opacity-0" />
-          <NowPlaying className="status-card opacity-0" />
+          <WishlistSuggestion
+            href="/wishlist"
+            className="status-card opacity-0"
+          />
+          <NowPlaying href="/bonsai-fm" className="status-card opacity-0" />
         </div>
       )}
       <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-x-0 lg:gap-y-16">
@@ -207,8 +210,9 @@ export default function DashboardPage() {
               <strong>heutige Empfehlung</strong> vor. So geht keine gute Idee
               mehr im Chat unter, und die Frage „Was zocken wir heute?“ ist
               schnell beantwortet. Steht der nächste Spielekauf an, vergleicht
-              er die Preise auf <strong>Steam</strong> und{" "}
-              <strong>Instant Gaming</strong> und findet das{" "}
+              er die Preise auf <strong>Steam</strong>,{" "}
+              <strong>Instant Gaming</strong> und im{" "}
+              <strong>PlayStation Store</strong> und findet das{" "}
               <strong>günstigste Angebot</strong>. Wird ein Spiel deutlich
               günstiger, <strong>meldet er sich im Discord</strong>, damit am
               Ende mehr fürs nächste Spiel übrig bleibt. Und wenn ihr zusammen

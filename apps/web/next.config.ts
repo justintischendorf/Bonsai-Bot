@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "cdn.discordapp.com" },
       { protocol: "https", hostname: "i.ytimg.com" },
+      { protocol: "https", hostname: "**.steamstatic.com" },
+      { protocol: "https", hostname: "gaming-cdn.com" },
+      { protocol: "https", hostname: "image.api.playstation.com" },
     ],
   },
   redirects() {

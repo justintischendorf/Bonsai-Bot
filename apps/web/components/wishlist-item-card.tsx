@@ -16,15 +16,19 @@ import { wishlistQueryKey, type WishlistItem } from "@/hooks/use-wishlist";
 import { apiClient } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
+import GameCover from "./game-cover";
+import { InstantGamingLogo, PlayStationLogo, SteamLogo } from "./shop-logos";
 import { toast } from "./ui/toast";
 
 const DESCRIPTION_PREVIEW_LENGTH = 120;
 
 export default function WishlistItemCard({
   item,
+  imageLoading,
   className,
 }: {
   item: WishlistItem;
+  imageLoading?: "eager" | "lazy";
   className?: string;
 }) {
   const queryClient = useQueryClient();
@@ -32,15 +36,24 @@ export default function WishlistItemCard({
   const shops = [
     {
       name: "Steam",
+      Logo: SteamLogo,
       link: item.steamLink,
       price: item.steamPrice,
       isLinkBroken: item.steamLinkBroken,
     },
     {
       name: "Instant Gaming",
+      Logo: InstantGamingLogo,
       link: item.instantGamingLink,
       price: item.instantGamingPrice,
       isLinkBroken: item.instantGamingLinkBroken,
+    },
+    {
+      name: "PlayStation Store",
+      Logo: PlayStationLogo,
+      link: item.playstationLink,
+      price: item.playstationPrice,
+      isLinkBroken: item.playstationLinkBroken,
     },
   ];
 
@@ -77,6 +90,14 @@ export default function WishlistItemCard({
         className,
       )}
     >
+      <GameCover
+        imageUrl={item.imageUrl}
+        label={`Titelbild von ${item.name}`}
+        sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+        loading={imageLoading}
+        className="w-full rounded-md"
+        iconClassName="size-8"
+      />
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h2 className="truncate text-lg font-semibold">{item.name}</h2>
@@ -139,7 +160,7 @@ export default function WishlistItemCard({
       )}
       <div className="mt-auto flex flex-col gap-1">
         {shops.map(
-          ({ name, link, price, isLinkBroken }) =>
+          ({ name, Logo, link, price, isLinkBroken }) =>
             link && (
               <div key={name} className="flex flex-col gap-0.5">
                 <div className="flex items-baseline justify-between gap-2">
@@ -147,6 +168,7 @@ export default function WishlistItemCard({
                     href={link}
                     className="group -my-0.5 flex w-fit items-center gap-1 py-0.5 text-sm font-medium text-muted-foreground transition-colors duration-300 hover:text-bonsai-leaf-light"
                   >
+                    <Logo className="size-3.5 shrink-0" />
                     {name}
                     <MoveRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
                   </Link>
@@ -174,6 +196,7 @@ export default function WishlistItemCard({
 export function WishlistItemCardSkeleton() {
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-accent p-3">
+      <Skeleton className="aspect-616/353 w-full rounded-md" />
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <Skeleton className="h-7 w-2/3" />
