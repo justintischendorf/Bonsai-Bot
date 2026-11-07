@@ -22,8 +22,7 @@ export default function NowPlaying({
     <article
       className={cn(
         "relative flex w-full items-center gap-3 rounded-xl border p-3 sm:w-1/2 lg:w-1/4",
-        href &&
-          "transition-colors duration-300 hover:border-bonsai-leaf-light",
+        href && "transition-colors duration-300 hover:border-bonsai-leaf-light",
         className,
       )}
     >
