@@ -3,10 +3,12 @@ import {
   BadgeX,
   CircleCheckBig,
   MoveRight,
+  ThumbsUp,
   Trash2,
   TriangleAlert,
 } from "lucide-react";
 import Link from "next/link";
+import React from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,13 +22,18 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { wishlistQueryKey, type WishlistItem } from "@/hooks/use-wishlist";
 import { apiClient } from "@/lib/api-client";
+import { useSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
+import { ConfirmAlert } from "./confirm-alert";
 import GameCover from "./game-cover";
 import { InstantGamingLogo, PlayStationLogo, SteamLogo } from "./shop-logos";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { toast } from "./ui/toast";
 
 const DESCRIPTION_PREVIEW_LENGTH = 120;
+const MAX_VISIBLE_LIKES = 9;
 
 export default function WishlistItemCard({
   item,
@@ -38,6 +45,12 @@ export default function WishlistItemCard({
   className?: string;
 }) {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const currentUser = session?.user;
+  const otherLikes = item.likes.filter(({ id }) => id !== currentUser?.id);
+  const visibleLikes = otherLikes.slice(0, MAX_VISIBLE_LIKES);
+  const [showRemoveWishlistConfirm, setShowRemoveWishlistConfirm] =
+    React.useState(false);
 
   const shops = [
     {
@@ -68,6 +81,36 @@ export default function WishlistItemCard({
       return apiClient.api.wishlist(input).delete();
     },
   });
+
+  const { mutateAsync: setWishlistItemLike } = useMutation({
+    mutationFn: async (input: { id: number; liked: boolean }) => {
+      return apiClient.api
+        .wishlist({ id: input.id })
+        .like.patch({ liked: input.liked });
+    },
+  });
+
+  async function handleToggleLike() {
+    const liked = !item.likedByMe;
+    const { error: setLikeError } = await setWishlistItemLike({
+      id: item.id,
+      liked,
+    });
+
+    if (setLikeError) {
+      toast.add({
+        title:
+          setLikeError.status +
+          (liked
+            ? " Fehler beim Liken des Spiels"
+            : " Fehler beim Entfernen des Likes"),
+        description: setLikeError.value.message,
+      });
+      return;
+    }
+
+    queryClient.invalidateQueries({ queryKey: wishlistQueryKey });
+  }
 
   async function handleRemoveWishlistItem(id: number) {
     const { error: removeWishlistItemError } = await removeWishlistItem({ id });
@@ -124,19 +167,78 @@ export default function WishlistItemCard({
             )}
           </div>
         </div>
-        <Button
-          className="text-muted-foreground transition-colors duration-300 hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
-          variant="ghost"
-          size="icon-sm"
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            handleRemoveWishlistItem(item.id);
-          }}
-          aria-label={`${item.name} von der Wunschliste entfernen`}
-        >
-          <Trash2 />
-        </Button>
+        <div className="flex">
+          <HoverCard>
+            <HoverCardTrigger
+              delay={10}
+              closeDelay={100}
+              render={
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  type="button"
+                  aria-label={`${item.name} gefällt mir`}
+                  aria-pressed={item.likedByMe}
+                  className={cn(
+                    "text-muted-foreground transition-colors duration-300 hover:bg-bonsai-leaf-light/10 hover:text-bonsai-leaf-light data-popup-open:text-bonsai-leaf-light dark:hover:bg-bonsai-leaf-light/15",
+                    item.likedByMe && "text-bonsai-leaf-light",
+                  )}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleToggleLike();
+                  }}
+                >
+                  <ThumbsUp />
+                </Button>
+              }
+            />
+            <HoverCardContent
+              align="end"
+              className="flex w-60 flex-col gap-3 rounded-xl border border-foreground/10 bg-background p-3 shadow-lg ring-0"
+            >
+              <p className="flex items-center gap-2 text-sm font-semibold">
+                <ThumbsUp className="size-4 text-bonsai-leaf-light" />
+                Gefällt außerdem
+              </p>
+              {visibleLikes.length > 0 ? (
+                <ul className="flex flex-wrap gap-1.5">
+                  {visibleLikes.map((user) => (
+                    <li
+                      key={user.id}
+                      className="flex max-w-full items-center gap-1.5 rounded-full border border-accent py-0.5 pr-2.5 pl-0.5 text-xs font-medium text-bonsai-pot"
+                    >
+                      <Avatar size="sm" className="size-5">
+                        <AvatarImage src={user.image ?? undefined} alt="" />
+                        <AvatarFallback className="text-[0.625rem]">
+                          {[...user.name][0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="truncate">{user.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Bisher noch niemandem.
+                </p>
+              )}
+            </HoverCardContent>
+          </HoverCard>
+
+          <Button
+            className="text-muted-foreground transition-colors duration-300 hover:bg-destructive/10 hover:text-destructive dark:hover:bg-destructive/20"
+            variant="ghost"
+            size="icon-sm"
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              setShowRemoveWishlistConfirm(true);
+            }}
+            aria-label={`${item.name} von der Wunschliste entfernen`}
+          >
+            <Trash2 />
+          </Button>
+        </div>
       </div>
       {item.description.length > DESCRIPTION_PREVIEW_LENGTH ? (
         <div className="flex flex-col items-start gap-1">
@@ -203,6 +305,13 @@ export default function WishlistItemCard({
             ),
         )}
       </div>
+      <ConfirmAlert
+        message={`Möchtest du ${item.name} aus der Wunschliste entfernen?`}
+        open={showRemoveWishlistConfirm}
+        onOpenChange={setShowRemoveWishlistConfirm}
+        onConfirm={() => handleRemoveWishlistItem(item.id)}
+        title="Spiel entfernen?"
+      />
     </article>
   );
 }

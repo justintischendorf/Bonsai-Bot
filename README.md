@@ -6,7 +6,7 @@ Discord-Bot mit Web-Dashboard für einen einzelnen Discord-Server. Mitglieder me
 
 - **Discord-Login:** Anmeldung per Discord, nur für Mitglieder des konfigurierten Servers
 - **Dashboard:** Serverinfos, Mitgliederliste und täglicher Spielevorschlag aus den bereits erschienenen Spielen der Wunschliste
-- **Wunschliste:** Spiele per Link zu Steam, Instant Gaming oder dem PlayStation Store hinzufügen, Titelbild und Preise werden automatisch übernommen und alle 30 Minuten aktualisiert, Preissenkungen werden in einem Discord-Channel gemeldet
+- **Wunschliste:** Spiele per Link zu Steam, Instant Gaming oder dem PlayStation Store hinzufügen und angeben, ob Crossplay möglich ist. Titelbild und Preise werden automatisch übernommen und alle 30 Minuten aktualisiert, Preissenkungen werden in einem Discord-Channel gemeldet. Spiele lassen sich liken, beim Daumen sieht man mit Profilbild, wem das Spiel noch gefällt. Vor dem Entfernen eines Spiels fragt das Dashboard noch einmal nach
 - **Bonsai FM:** Warteschlange mit YouTube-Links, dazu Beitreten, Verlassen, Abspielen, Stoppen und Überspringen über die Website
 - **Slash-Commands:** `/ping` und `/link`
 
