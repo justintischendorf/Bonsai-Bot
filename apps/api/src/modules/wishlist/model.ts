@@ -7,6 +7,9 @@ export namespace WishlistModel {
     playstationLink: t.Optional(t.String()),
     crossplayAvailable: t.Boolean(),
   });
+  export const SetLike = t.Object({
+    liked: t.Boolean(),
+  });
 
   export const ScrapedShop = t.Object({
     name: t.String(),

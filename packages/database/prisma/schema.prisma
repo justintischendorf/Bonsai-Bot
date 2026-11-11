@@ -22,6 +22,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+  wishlistLikes WishlistLike[]
 
   @@map("user")
 }
@@ -91,8 +92,21 @@ model Wishlist {
   imageUrl                String?
   createdBy               String
   createdAt               DateTime @default(now())
+  likes                   WishlistLike[]
 
   @@map("wishlist")
+}
+
+model WishlistLike {
+  wishlistId Int
+  userId     String
+  createdAt  DateTime @default(now())
+  wishlist   Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([wishlistId, userId])
+  @@index([userId])
+  @@map("wishlist_like")
 }
 
 model MusicQueue {
