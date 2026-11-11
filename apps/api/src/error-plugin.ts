@@ -131,6 +131,16 @@ export const errorPlugin = new Elysia({ name: "error" }).onError(
       };
     }
 
+    if (error instanceof Error && error.message === "GAME_NOT_FOUND") {
+      set.status = 404;
+      logger.warn("Spiel nicht in der Wunschliste gefunden");
+      return {
+        success: false,
+        message: "Das Spiel ist nicht mehr in der Wunschliste",
+        error: "GAME_NOT_FOUND",
+      };
+    }
+
     if (error instanceof Error && error.message === "STEAM_SCRAPING_FAILED") {
       set.status = 400;
       logger.warn("Steam-Scraping fehlgeschlagen");

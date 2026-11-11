@@ -27,10 +27,22 @@ const MIN_PRICE_DROP_PERCENT = 10;
 export abstract class WishlistService {
   // --------------------------------------------------------------------------> GET api/wishlist
   //                                                                             - returns games added to wishlist
-  static async getWishlist() {
+  static async getWishlist(userId: string) {
     logger.info("Fetching wishlist items from database");
-    const wishlistItems = await prisma.wishlist.findMany();
-    return wishlistItems.map(formatPrices);
+    const wishlistItems = await prisma.wishlist.findMany({
+      include: {
+        likes: {
+          orderBy: { createdAt: "asc" },
+          select: { user: { select: { id: true, name: true, image: true } } },
+        },
+      },
+    });
+
+    return wishlistItems.map(({ likes, ...item }) => ({
+      ...formatPrices(item),
+      likes: likes.map(({ user }) => user),
+      likedByMe: likes.some(({ user }) => user.id === userId),
+    }));
   }
 
   // --------------------------------------------------------------------------> GET api/wishlist/suggestion
@@ -141,6 +153,36 @@ export abstract class WishlistService {
         createdBy: userName,
       },
     });
+  }
+
+  // --------------------------------------------------------------------------> PATCH api/wishlist/:id/like
+  //                                                                             - like or unlike a game for the current user
+  static async setLike({
+    params,
+    body,
+    userId,
+  }: {
+    params: (typeof IdParams)["static"];
+    body: WishlistModel["SetLike"];
+    userId: string;
+  }) {
+    logger.info("Setting wishlist like", { id: params.id, liked: body.liked });
+
+    const exists = await prisma.wishlist.count({ where: { id: params.id } });
+    if (!exists) throw new Error("GAME_NOT_FOUND");
+
+    const key = { wishlistId: params.id, userId };
+    if (body.liked) {
+      await prisma.wishlistLike.upsert({
+        where: { wishlistId_userId: key },
+        create: key,
+        update: {},
+      });
+    } else {
+      await prisma.wishlistLike.deleteMany({ where: key });
+    }
+
+    return { liked: body.liked };
   }
 
   // --------------------------------------------------------------------------> DELETE api/wishlist
