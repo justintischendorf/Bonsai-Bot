@@ -8,6 +8,7 @@ import { errorPlugin } from "./error-plugin";
 import { authPlugin } from "./modules/auth";
 import { discord } from "./modules/discord";
 import { music } from "./modules/music";
+import { watch } from "./modules/watch";
 import { wishlist } from "./modules/wishlist";
 import { WishlistService } from "./modules/wishlist/service";
 
@@ -37,6 +38,7 @@ const app = new Elysia({ prefix: "/api" })
   .use(music)
   .use(discord)
   .use(wishlist)
+  .use(watch)
   .listen(process.env.API_SERVER_PORT || 3001);
 
 logger.info(`🦊 Elysia läuft auf http://localhost:${app.server?.port}`);
