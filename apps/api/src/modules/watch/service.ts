@@ -92,8 +92,9 @@ export abstract class WatchService {
   // --------------------------------------------------------------------------> GET api/watch
   //                                                                             - returns the queue and the current playback
   static async getQueue() {
-    const queue = await prisma.watchQueue.findMany({
-      orderBy: [...QUEUE_ORDER],
+    const queue = await exclusive(async () => {
+      if (!playback.current) await startNext();
+      return prisma.watchQueue.findMany({ orderBy: [...QUEUE_ORDER] });
     });
 
     return {
