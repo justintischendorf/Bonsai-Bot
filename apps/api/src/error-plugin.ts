@@ -59,6 +59,33 @@ const MUSIC_ERRORS: Record<string, { status: number; message: string }> = {
   },
 };
 
+const WATCH_ERRORS: Record<string, { status: number; message: string }> = {
+  INVALID_VIDEO_URL: {
+    status: 400,
+    message: "Bitte gib einen gültigen YouTube-Link zu einem Video an",
+  },
+  VIDEO_NOT_FOUND: {
+    status: 404,
+    message: "Dieses Video wurde nicht gefunden",
+  },
+  VIDEO_NOT_EMBEDDABLE: {
+    status: 400,
+    message: "Dieses Video darf nicht außerhalb von YouTube abgespielt werden",
+  },
+  VIDEO_LOAD_FAILED: {
+    status: 502,
+    message: "Das Video konnte nicht von YouTube geladen werden",
+  },
+  NO_VIDEO_PLAYING: {
+    status: 409,
+    message: "Gerade läuft kein Video",
+  },
+  VIDEO_NOT_IN_QUEUE: {
+    status: 404,
+    message: "Das Video ist nicht mehr in der Warteschlange",
+  },
+};
+
 export const errorPlugin = new Elysia({ name: "error" }).onError(
   { as: "global" },
   ({ code, error, set }) => {
@@ -195,6 +222,18 @@ export const errorPlugin = new Elysia({ name: "error" }).onError(
       return {
         success: false,
         message: musicError.message,
+        error: error.message,
+      };
+    }
+
+    const watchError =
+      error instanceof Error ? WATCH_ERRORS[error.message] : undefined;
+    if (error instanceof Error && watchError) {
+      set.status = watchError.status;
+      logger.warn(`Watch-Fehler: ${error.message}`);
+      return {
+        success: false,
+        message: watchError.message,
         error: error.message,
       };
     }

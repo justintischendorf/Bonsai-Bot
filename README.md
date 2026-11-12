@@ -1,6 +1,6 @@
 # Bonsai Bot
 
-Discord-Bot mit Web-Dashboard für einen einzelnen Discord-Server. Mitglieder melden sich mit ihrem Discord-Account an, verwalten eine gemeinsame Spiele-Wunschliste und steuern die Musik im Voice-Channel über die Website.
+Discord-Bot mit Web-Dashboard für einen einzelnen Discord-Server. Mitglieder melden sich mit ihrem Discord-Account an, verwalten eine gemeinsame Spiele-Wunschliste, steuern die Musik im Voice-Channel über die Website und schauen zusammen YouTube-Videos.
 
 ## Funktionen
 
@@ -8,6 +8,7 @@ Discord-Bot mit Web-Dashboard für einen einzelnen Discord-Server. Mitglieder me
 - **Dashboard:** Serverinfos, Mitgliederliste und täglicher Spielevorschlag aus den bereits erschienenen Spielen der Wunschliste
 - **Wunschliste:** Spiele per Link zu Steam, Instant Gaming oder dem PlayStation Store hinzufügen und angeben, ob Crossplay möglich ist. Titelbild und Preise werden automatisch übernommen und alle 30 Minuten aktualisiert, Preissenkungen werden in einem Discord-Channel gemeldet. Spiele lassen sich liken, beim Daumen sieht man mit Profilbild, wem das Spiel noch gefällt. Vor dem Entfernen eines Spiels fragt das Dashboard noch einmal nach
 - **Bonsai FM:** Warteschlange mit YouTube-Links, dazu Beitreten, Verlassen, Abspielen, Stoppen und Überspringen über die Website
+- **Bonsai Watch:** YouTube-Videos gemeinsam schauen. Videos kommen per Link auf eine Warteschlange, die sich per Drag-and-drop sortieren lässt. Abspielen, Pausieren und Springen im Video gelten für alle, die gerade zuschauen. Am Ende eines Videos startet automatisch das nächste
 - **Slash-Commands:** `/ping` und `/link`
 
 ## Aufbau
@@ -101,6 +102,10 @@ Das Deployment läuft über [Dokploy](https://dokploy.com) mit der Datei `docker
 Web-Dashboard und API müssen unter derselben Domain laufen, weil das Web-Dashboard das Session-Cookie der API selbst prüft. Auf getrennten Subdomains käme das Cookie dort nicht an. Eine Änderung von `BETTER_AUTH_URL` erfordert einen neuen Build, weil die Adresse fest ins Frontend geschrieben wird.
 
 Sichern lassen sich die Daten über die Volume Backups von Dokploy, betroffen sind die Volumes `database` und `bot-data`.
+
+Neue Migrationen, zum Beispiel die Tabelle für die Warteschlange von Bonsai Watch, spielt der Service `migrate` bei jedem Deployment automatisch ein, bevor API und Web-Dashboard starten.
+
+Bei Bonsai Watch liegt nur die Warteschlange in der Datenbank. Welches Video gerade läuft und an welcher Stelle, merkt sich die API im Arbeitsspeicher. Nach einem Neustart der API geht es mit dem nächsten Video der Warteschlange weiter. Titel und Kanal eines Videos holt die API über die oEmbed-Schnittstelle von YouTube, dafür ist kein API-Key nötig.
 
 Falls YouTube die IP des Servers blockiert, lässt sich in der `.env` optional OAuth aktivieren. Die Variablen dafür stehen in der `.env.example`.
 

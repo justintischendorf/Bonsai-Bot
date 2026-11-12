@@ -17,7 +17,7 @@ const pageLabels: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/wishlist": "Wunschliste",
   "/bonsai-fm": "Bonsai FM",
-  "/settings": "Einstellungen",
+  "/bonsai-watch": "Bonsai Watch",
 };
 
 export function Navigation() {

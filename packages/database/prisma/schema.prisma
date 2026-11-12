@@ -123,3 +123,16 @@ model MusicQueue {
 
   @@map("music_queue")
 }
+
+model WatchQueue {
+  id           Int      @id @default(autoincrement())
+  videoId      String
+  title        String
+  channel      String
+  thumbnailUrl String
+  position     Int      @default(0)
+  requestedBy  String
+  createdAt    DateTime @default(now())
+
+  @@map("watch_queue")
+}
