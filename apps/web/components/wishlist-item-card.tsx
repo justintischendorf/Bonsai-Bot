@@ -135,7 +135,7 @@ export default function WishlistItemCard({
   return (
     <article
       className={cn(
-        "flex flex-col gap-3 rounded-xl border border-accent p-3",
+        "flex flex-col gap-2.5 rounded-xl border border-accent p-3",
         className,
       )}
     >
@@ -144,7 +144,7 @@ export default function WishlistItemCard({
         label={`Titelbild von ${item.name}`}
         sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
         loading={imageLoading}
-        className="w-full rounded-md"
+        className="w-full rounded-md mb-2"
         iconClassName="size-8"
       />
       <div className="flex items-start justify-between gap-2">
@@ -180,7 +180,7 @@ export default function WishlistItemCard({
                   aria-label={`${item.name} gefällt mir`}
                   aria-pressed={item.likedByMe}
                   className={cn(
-                    "text-muted-foreground transition-colors duration-300 hover:bg-bonsai-leaf-light/10 hover:text-bonsai-leaf-light data-popup-open:text-bonsai-leaf-light dark:hover:bg-bonsai-leaf-light/15",
+                    "relative text-muted-foreground transition-colors duration-300 hover:bg-bonsai-leaf-light/10 hover:text-bonsai-leaf-light data-popup-open:text-bonsai-leaf-light dark:hover:bg-bonsai-leaf-light/15",
                     item.likedByMe && "text-bonsai-leaf-light",
                   )}
                   onClick={(e) => {
@@ -188,6 +188,9 @@ export default function WishlistItemCard({
                     handleToggleLike();
                   }}
                 >
+                  <span className="text-xs absolute -top-3 -right-1 bg-bonsai-leaf-light rounded-full w-4 h-4 text-background flex items-center justify-center">
+                    {item.likes?.length ?? 0}
+                  </span>
                   <ThumbsUp />
                 </Button>
               }
