@@ -4,7 +4,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
-import { Gamepad2, MoveRight, Radio } from "lucide-react";
+import { Gamepad2, MoveRight, Radio, TvMinimalPlay } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
@@ -39,6 +39,12 @@ const PAGE_LINKS = [
     title: "Bonsai FM",
     description: "Jam starten und Musik hören",
     Icon: Radio,
+  },
+  {
+    href: "/bonsai-watch",
+    title: "Bonsai Watch",
+    description: "Youtube Videos zusammen schauen",
+    Icon: TvMinimalPlay,
   },
 ];
 

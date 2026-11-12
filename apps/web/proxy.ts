@@ -16,5 +16,10 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/wishlist/:path*", "/bonsai-fm/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/wishlist/:path*",
+    "/bonsai-fm/:path*",
+    "/bonsai-watch/:path*",
+  ],
 };
