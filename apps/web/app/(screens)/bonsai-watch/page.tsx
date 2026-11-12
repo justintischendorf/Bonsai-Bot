@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import WatchPlayer from "@/components/watch-player";
 import WatchQueue from "@/components/watch-queue";
 import { WatchVideoForm } from "@/components/watch-video-form";
-import { useWatchQueue } from "@/hooks/use-watch-queue";
+import { useWatchLive, useWatchQueue } from "@/hooks/use-watch-queue";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 
@@ -20,6 +20,7 @@ let queueIntroPlayed = false;
 
 export default function BonsaiWatchPage() {
   const { isLoading: isWatchQueueLoading } = useWatchQueue();
+  useWatchLive();
 
   const pageRef = useRef<HTMLDivElement>(null);
   const [introStarted, setIntroStarted] = useState(introPlayed);
