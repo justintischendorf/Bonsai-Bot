@@ -4,22 +4,30 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { BonsaiLogo } from "@/components/bonsai-logo";
 import { Separator } from "@/components/ui/separator";
+import WatchPlayer from "@/components/watch-player";
+import WatchQueue from "@/components/watch-queue";
+import { WatchVideoForm } from "@/components/watch-video-form";
+import { useWatchQueue } from "@/hooks/use-watch-queue";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 
 let introPlayed = false;
+let queueIntroPlayed = false;
 
 export default function BonsaiWatchPage() {
+  const { isLoading: isWatchQueueLoading } = useWatchQueue();
+
   const pageRef = useRef<HTMLDivElement>(null);
+  const [introStarted, setIntroStarted] = useState(introPlayed);
 
   useGSAP(
     () => {
       if (introPlayed) {
-        gsap.set(".split", { opacity: 1 });
+        gsap.set(".split, .video-form, .watch-player", { opacity: 1 });
         return;
       }
 
@@ -31,6 +39,7 @@ export default function BonsaiWatchPage() {
       const tl = gsap.timeline({
         onStart: () => {
           introPlayed = true;
+          setIntroStarted(true);
         },
         scrollTrigger: {
           trigger: ".split",
@@ -77,9 +86,23 @@ export default function BonsaiWatchPage() {
             ease: "power2.inOut",
           },
           "<0.2",
-        );
+        )
+        .to(".video-form, .watch-player", { opacity: 1, duration: 0.5 }, 0);
     },
     { scope: pageRef },
+  );
+
+  useGSAP(
+    () => {
+      if (isWatchQueueLoading || queueIntroPlayed) return;
+      if (!introStarted) {
+        gsap.set(".stagger", { opacity: 0 });
+        return;
+      }
+      queueIntroPlayed = true;
+      gsap.fromTo(".stagger", { opacity: 0 }, { opacity: 1, stagger: 0.1 });
+    },
+    { scope: pageRef, dependencies: [isWatchQueueLoading, introStarted] },
   );
 
   return (
@@ -93,10 +116,18 @@ export default function BonsaiWatchPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
         <p className="split opacity-0 max-w-3xl text-lg leading-relaxed text-pretty text-bonsai-pot [&_strong]:font-bold [&_strong]:text-bonsai-leaf-light">
           Hier kannst du zusammen mit anderen <strong>Bonsai Bot</strong>{" "}
-          Nutzern <strong>YouTube Videos</strong> schauen.
+          Nutzern <strong>YouTube Videos</strong> schauen. Füge ein Video über
+          seinen <strong>Link</strong> hinzu. <strong>Play</strong>,{" "}
+          <strong>Pause</strong> und <strong>Springen</strong> gelten für alle,
+          die gerade zuschauen.
         </p>
+        <WatchVideoForm className="video-form opacity-0 w-full shrink-0 sm:w-md" />
       </div>
       <Separator />
+      <div className="flex w-full flex-col gap-5 lg:flex-row lg:gap-16">
+        <WatchPlayer className="watch-player opacity-0" />
+        <WatchQueue />
+      </div>
     </div>
   );
 }
