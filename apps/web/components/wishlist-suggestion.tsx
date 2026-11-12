@@ -1,4 +1,4 @@
-import { MoveRight } from "lucide-react";
+import { BadgeX, CircleCheckBig, MoveRight } from "lucide-react";
 import Link from "next/link";
 
 import { useWishlistSuggestion } from "@/hooks/use-wishlist-suggestion";
@@ -68,6 +68,14 @@ export default function WishlistSuggestion({
         <h2 className="truncate text-sm font-semibold">
           {wishlistSuggestion.name}
         </h2>
+        <div className="flex items-center gap-1">
+          <p className="text-xs text-muted-foreground">Crossplay</p>
+          {wishlistSuggestion.crossplayAvailable ? (
+            <CircleCheckBig className="size-3.5 text-bonsai-leaf-light" />
+          ) : (
+            <BadgeX className="size-3.5 text-destructive" />
+          )}
+        </div>
         {shops.map(
           ({ name, Logo, link, price }) =>
             link && (
