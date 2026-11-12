@@ -21,6 +21,14 @@ type Playback = {
   updatedAt: number;
 };
 
+export type WatchState = Awaited<ReturnType<typeof buildState>>;
+type Listener = (state: WatchState) => void;
+
+const listeners = new Set<Listener>();
+
+// Starts at the boot time so clients accept the state again after a restart.
+let version = Date.now();
+
 const playback: Playback = {
   current: null,
   paused: true,
@@ -42,6 +50,30 @@ function getPosition() {
 
 function setPlayback(changes: Partial<Playback>) {
   Object.assign(playback, changes, { updatedAt: Date.now() });
+  version++;
+}
+
+async function buildState() {
+  const snapshot = {
+    current: playback.current,
+    paused: playback.paused,
+    position: getPosition(),
+    version,
+  };
+  const queue = await prisma.watchQueue.findMany({ orderBy: [...QUEUE_ORDER] });
+  return { queue, ...snapshot };
+}
+
+// Pushes the new state to every open socket, clients drop it if they already have a newer version.
+async function broadcast() {
+  const state = await buildState();
+  for (const listener of listeners) listener(state);
+  return state;
+}
+
+async function changed() {
+  version++;
+  return broadcast();
 }
 
 async function startNext() {
@@ -92,17 +124,18 @@ export abstract class WatchService {
   // --------------------------------------------------------------------------> GET api/watch
   //                                                                             - returns the queue and the current playback
   static async getQueue() {
-    const queue = await exclusive(async () => {
-      if (!playback.current) await startNext();
-      return prisma.watchQueue.findMany({ orderBy: [...QUEUE_ORDER] });
+    return await exclusive(async () => {
+      if (playback.current) return buildState();
+      await startNext();
+      return playback.current ? broadcast() : buildState();
     });
+  }
 
-    return {
-      queue,
-      current: playback.current,
-      paused: playback.paused,
-      position: getPosition(),
-    };
+  // --------------------------------------------------------------------------> WS api/watch/live
+  //                                                                             - calls the listener on every change, returns the unsubscribe
+  static subscribe(listener: Listener) {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
   }
 
   // --------------------------------------------------------------------------> POST api/watch/add-video
@@ -135,6 +168,7 @@ export abstract class WatchService {
       });
 
       if (!playback.current) await startNext();
+      await changed();
       return video;
     });
   }
@@ -143,33 +177,43 @@ export abstract class WatchService {
   //                                                                             - continue the video for everyone at the given position
   static async playVideo(body: WatchModel["SetPlayback"]) {
     logger.info("Playing video", { position: body.position });
-    if (!playback.current) throw new Error("NO_VIDEO_PLAYING");
-    setPlayback({ paused: false, position: body.position });
+    return await exclusive(async () => {
+      if (!playback.current) throw new Error("NO_VIDEO_PLAYING");
+      setPlayback({ paused: false, position: body.position });
+      return broadcast();
+    });
   }
 
   // --------------------------------------------------------------------------> POST api/watch/pause
   //                                                                             - pause the video for everyone at the given position
   static async pauseVideo(body: WatchModel["SetPlayback"]) {
     logger.info("Pausing video", { position: body.position });
-    if (!playback.current) throw new Error("NO_VIDEO_PLAYING");
-    setPlayback({ paused: true, position: body.position });
+    return await exclusive(async () => {
+      if (!playback.current) throw new Error("NO_VIDEO_PLAYING");
+      setPlayback({ paused: true, position: body.position });
+      return broadcast();
+    });
   }
 
   // --------------------------------------------------------------------------> POST api/watch/seek
   //                                                                             - jump to a position for everyone, keeps playing or paused
   static async seekVideo(body: WatchModel["SetPlayback"]) {
     logger.info("Seeking video", { position: body.position });
-    if (!playback.current) throw new Error("NO_VIDEO_PLAYING");
-    setPlayback({ position: body.position });
+    return await exclusive(async () => {
+      if (!playback.current) throw new Error("NO_VIDEO_PLAYING");
+      setPlayback({ position: body.position });
+      return broadcast();
+    });
   }
 
   // --------------------------------------------------------------------------> POST api/watch/skip
   //                                                                             - start the next video in the queue
   static async skipVideo(body: WatchModel["SkipVideo"]) {
-    await exclusive(async () => {
-      if (playback.current?.id !== body.currentId) return;
+    return await exclusive(async () => {
+      if (playback.current?.id !== body.currentId) return buildState();
       logger.info("Skipping video", { videoId: body.currentId });
       await startNext();
+      return broadcast();
     });
   }
 
@@ -184,7 +228,7 @@ export abstract class WatchService {
   }) {
     logger.info("Moving video in queue", { videoId: params.id });
 
-    await exclusive(async () => {
+    return await exclusive(async () => {
       const queue = await prisma.watchQueue.findMany({
         orderBy: [...QUEUE_ORDER],
         select: { id: true },
@@ -196,7 +240,7 @@ export abstract class WatchService {
       ) {
         throw new Error("VIDEO_NOT_IN_QUEUE");
       }
-      if (params.id === body.beforeId) return;
+      if (params.id === body.beforeId) return buildState();
 
       const reordered = ids.filter((id) => id !== params.id);
       const index =
@@ -210,6 +254,7 @@ export abstract class WatchService {
           prisma.watchQueue.update({ where: { id }, data: { position } }),
         ),
       );
+      return changed();
     });
   }
 
@@ -218,11 +263,12 @@ export abstract class WatchService {
   static async removeVideoFromQueue(params: (typeof IdParams)["static"]) {
     logger.info("Removing video from queue", { videoId: params.id });
 
-    await exclusive(async () => {
+    return await exclusive(async () => {
       const { count } = await prisma.watchQueue.deleteMany({
         where: { id: params.id },
       });
       if (count === 0) throw new Error("VIDEO_NOT_IN_QUEUE");
+      return changed();
     });
   }
 }
