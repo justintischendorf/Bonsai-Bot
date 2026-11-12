@@ -5,8 +5,26 @@ import { sessionPlugin } from "../auth";
 import { WatchModel } from "./model";
 import { WatchService } from "./service";
 
+const unsubscribers = new Map<string, () => void>();
+
 export const watch = new Elysia({ prefix: "/watch" })
   .use(sessionPlugin)
+
+  // --------------------------------------------------------------------------> WS api/watch/live
+  //                                                                             - pushes the queue and playback on every change
+  .ws("/live", {
+    async open(ws) {
+      unsubscribers.set(
+        ws.id,
+        WatchService.subscribe((state) => ws.send(state)),
+      );
+      ws.send(await WatchService.getQueue());
+    },
+    close(ws) {
+      unsubscribers.get(ws.id)?.();
+      unsubscribers.delete(ws.id);
+    },
+  })
 
   // --------------------------------------------------------------------------> GET api/watch
   //                                                                             - shows watch queue and current playback
