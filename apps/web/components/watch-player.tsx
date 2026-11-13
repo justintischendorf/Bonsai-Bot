@@ -24,7 +24,7 @@ import LoadingSpinner from "./loading-spinner";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 import { toast } from "./ui/toast";
-import YouTubePlayer from "./youtube-player";
+import YouTubePlayer, { getPlayerVideoId } from "./youtube-player";
 
 const TICK_MS = 250;
 // Offset that gets corrected when the video is paused, seeking a paused video is invisible.
@@ -135,7 +135,7 @@ export default function WatchPlayer({ className }: { className?: string }) {
     const player = playerRef.current;
     const target = remote.current;
     if (!player || !target?.videoId) return null;
-    if (player.getVideoData().video_id !== target.videoId) return null;
+    if (getPlayerVideoId(player) !== target.videoId) return null;
     return { player, target };
   }
 

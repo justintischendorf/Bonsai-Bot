@@ -14,6 +14,11 @@ declare global {
 
 let apiPromise: Promise<void> | null = null;
 
+// Right after a video change the player has no video data yet and returns undefined.
+export function getPlayerVideoId(player: YT.Player): string | null {
+  return player.getVideoData?.()?.video_id ?? null;
+}
+
 function loadYouTubeApi() {
   if (apiPromise) return apiPromise;
   apiPromise = new Promise((resolve) => {
@@ -88,7 +93,7 @@ export default function YouTubePlayer({
 
   useEffect(() => {
     const player = playerRef.current;
-    if (!player || player.getVideoData().video_id === videoId) return;
+    if (!player || getPlayerVideoId(player) === videoId) return;
     player.cueVideoById(videoId);
   }, [videoId, playerRef]);
 
