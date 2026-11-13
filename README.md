@@ -107,9 +107,11 @@ Neue Migrationen, zum Beispiel die Tabelle für die Warteschlange von Bonsai Wat
 
 Bei Bonsai Watch liegt nur die Warteschlange in der Datenbank. Welches Video gerade läuft und an welcher Stelle, merkt sich die API im Arbeitsspeicher. Nach einem Neustart der API geht es mit dem nächsten Video der Warteschlange weiter. Titel und Kanal eines Videos holt die API über die oEmbed-Schnittstelle von YouTube, dafür ist kein API-Key nötig.
 
-Änderungen an Wiedergabe und Warteschlange schickt die API über den WebSocket `/api/watch/live` an alle, die die Seite offen haben. Der Reverse Proxy muss deshalb WebSocket-Verbindungen zur API durchlassen, was Traefik in Dokploy standardmäßig tut.
+Änderungen an Wiedergabe und Warteschlange schickt die API über den WebSocket `/api/watch/live` an alle, die die Seite offen haben. Über denselben WebSocket gleicht jeder Browser seine Uhr mit der Uhr des Servers ab, damit alle trotz Netzwerk-Verzögerung an derselben Stelle im Video sind. Der Reverse Proxy muss deshalb WebSocket-Verbindungen zur API durchlassen, was Traefik in Dokploy standardmäßig tut. API und Web-Dashboard sollten immer zusammen aktualisiert werden.
 
-Falls YouTube die IP des Servers blockiert, lässt sich in der `.env` optional OAuth aktivieren. Die Variablen dafür stehen in der `.env.example`.
+Die Videos bei Bonsai Watch spielt der eingebettete YouTube-Player im Browser der Zuschauer ab, nicht der Server. Zeigt der Player „Sign in“ bzw. „Melde dich an, damit wir sehen, dass du kein Bot bist“, sieht er den YouTube-Login der Person nicht. Meist blockiert der Browser Drittanbieter-Cookies (Standard bei Safari, Firefox, Brave und Edge sowie in Inkognito-Fenstern). Dann hilft eine erneute Anmeldung nicht. Die Person muss Drittanbieter-Cookies für die Seite erlauben, sich auf youtube.com anmelden und die Seite neu laden. Eine Anleitung pro Browser zeigt die Seite unter dem Player an.
+
+Falls YouTube die IP des Servers bei Bonsai FM blockiert, lässt sich in der `.env` optional OAuth aktivieren. Die Variablen dafür stehen in der `.env.example`. Auf Bonsai Watch hat das keinen Einfluss.
 
 ## Befehle
 
