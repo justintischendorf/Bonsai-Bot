@@ -43,9 +43,20 @@ function exclusive<T>(task: () => Promise<T>) {
   return result;
 }
 
-function getPosition() {
+function getPosition(now = Date.now()) {
   if (playback.paused) return playback.position;
-  return playback.position + (Date.now() - playback.updatedAt) / 1000;
+  return playback.position + (now - playback.updatedAt) / 1000;
+}
+
+// A longer delay means the client clock is off, then the position is taken as it is.
+const MAX_REQUEST_DELAY_MS = 2_000;
+
+// The video kept playing while the request was on its way, the position gets advanced by that time.
+function getRequestPosition(body: WatchModel["SetPlayback"], playing: boolean) {
+  if (!playing || body.serverTime === undefined) return body.position;
+  const delay = Date.now() - body.serverTime;
+  if (delay < 0 || delay > MAX_REQUEST_DELAY_MS) return body.position;
+  return body.position + delay / 1000;
 }
 
 function setPlayback(changes: Partial<Playback>) {
@@ -54,10 +65,13 @@ function setPlayback(changes: Partial<Playback>) {
 }
 
 async function buildState() {
+  const serverTime = Date.now();
   const snapshot = {
     current: playback.current,
     paused: playback.paused,
-    position: getPosition(),
+    position: getPosition(serverTime),
+    // Moment the position was taken, clients add the time since then while it plays.
+    serverTime,
     version,
   };
   const queue = await prisma.watchQueue.findMany({ orderBy: [...QUEUE_ORDER] });
@@ -179,7 +193,7 @@ export abstract class WatchService {
     logger.info("Playing video", { position: body.position });
     return await exclusive(async () => {
       if (!playback.current) throw new Error("NO_VIDEO_PLAYING");
-      setPlayback({ paused: false, position: body.position });
+      setPlayback({ paused: false, position: getRequestPosition(body, true) });
       return broadcast();
     });
   }
@@ -201,7 +215,9 @@ export abstract class WatchService {
     logger.info("Seeking video", { position: body.position });
     return await exclusive(async () => {
       if (!playback.current) throw new Error("NO_VIDEO_PLAYING");
-      setPlayback({ position: body.position });
+      setPlayback({
+        position: getRequestPosition(body, !playback.paused),
+      });
       return broadcast();
     });
   }
