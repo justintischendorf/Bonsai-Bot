@@ -20,6 +20,15 @@ export const watch = new Elysia({ prefix: "/watch" })
       );
       ws.send(await WatchService.getQueue());
     },
+    // Lets clients measure the offset between their clock and the server clock.
+    message(ws, message) {
+      ws.send({
+        type: "pong",
+        clientTime: message.clientTime,
+        serverTime: Date.now(),
+      });
+    },
+    body: WatchModel.LiveMessage,
     close(ws) {
       unsubscribers.get(ws.id)?.();
       unsubscribers.delete(ws.id);

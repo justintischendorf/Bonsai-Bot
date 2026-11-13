@@ -31,18 +31,20 @@ export default function YouTubePlayer({
   playerRef,
   onReady,
   onStateChange,
+  onError,
   className,
 }: {
   videoId: string;
   playerRef: RefObject<YT.Player | null>;
   onReady?: () => void;
   onStateChange?: (state: YT.PlayerState) => void;
+  onError?: (error: YT.PlayerError) => void;
   className?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const latest = useRef({ videoId, onReady, onStateChange });
+  const latest = useRef({ videoId, onReady, onStateChange, onError });
   useEffect(() => {
-    latest.current = { videoId, onReady, onStateChange };
+    latest.current = { videoId, onReady, onStateChange, onError };
   });
 
   useEffect(() => {
@@ -60,7 +62,8 @@ export default function YouTubePlayer({
         videoId: initialVideoId,
         width: "100%",
         height: "100%",
-        playerVars: { rel: 0, playsinline: 1 },
+        // The origin tells YouTube which site embeds the player.
+        playerVars: { rel: 0, playsinline: 1, origin: window.location.origin },
         events: {
           onReady: () => {
             if (cancelled || !player) return;
@@ -71,6 +74,7 @@ export default function YouTubePlayer({
             latest.current.onReady?.();
           },
           onStateChange: (event) => latest.current.onStateChange?.(event.data),
+          onError: (event) => latest.current.onError?.(event.data),
         },
       });
     });
